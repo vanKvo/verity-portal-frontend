@@ -1,0 +1,16 @@
+@import "@angular/material/prebuilt-themes/azure-blue.css";
+
+:root {
+  --primary-color: #002244;
+  --bg-color: #F8F9FA;
+  --error-color: #D32F2F;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--bg-color);
+  color: #333;
+}
+
+html, body { height: 100%; }

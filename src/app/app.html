@@ -1,21 +1,13 @@
-<mat-toolbar color="primary" style="background-color: var(--primary-color);">
+<mat-toolbar color="primary" style="background-color: var(--primary-color);" *ngIf="authService.isAuthenticated()">
   <mat-icon style="margin-right: 12px;">verified_user</mat-icon>
   <span>{{ title }}</span>
   <span style="flex: 1 1 auto;"></span>
-  <button mat-button>Login</button>
+  <span style="font-size: 14px; margin-right: 16px;">{{ authService.currentUser()?.email }}</span>
+  <button mat-icon-button (click)="authService.logout()">
+    <mat-icon>logout</mat-icon>
+  </button>
 </mat-toolbar>
 
-<main style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+<main [style.padding]="authService.isAuthenticated() ? '24px' : '0'" style="max-width: 1200px; margin: 0 auto;">
   <router-outlet></router-outlet>
-  
-  <!-- Temporary placeholder for landing page until routing is set up -->
-  <div style="text-align: center; margin-top: 100px;">
-    <h1 style="color: var(--primary-color); font-size: 2.5rem; margin-bottom: 16px;">Automated Data Reconciliation & Compliance</h1>
-    <p style="font-size: 1.2rem; color: #666; max-width: 600px; margin: 0 auto 32px;">
-      Streamlining ITAR, Export Control, and Security Audit workflows with precision.
-    </p>
-    <button mat-raised-button color="primary" style="background-color: var(--primary-color); padding: 0 32px; height: 48px;">
-      Get Started
-    </button>
-  </div>
 </main>

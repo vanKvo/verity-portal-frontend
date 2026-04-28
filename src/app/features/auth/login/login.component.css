@@ -1,0 +1,84 @@
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #002244 0%, #004488 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.header-logo mat-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #002244;
+}
+
+.header-logo h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #002244;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.login-btn {
+  height: 48px;
+  margin-top: 8px;
+  background-color: #002244;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0;
+  gap: 16px;
+  color: #999;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.divider mat-divider {
+  flex: 1;
+}
+
+.guest-section {
+  text-align: center;
+}
+
+.guest-section p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.guest-btn {
+  height: 48px;
+  border-color: #002244;
+  color: #002244;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding: 16px 0;
+}

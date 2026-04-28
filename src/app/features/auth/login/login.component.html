@@ -1,0 +1,55 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <div class="header-logo">
+        <mat-icon>verified_user</mat-icon>
+        <h1>Verity Portal</h1>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Corporate Email</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="user@verity.com">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Invalid corporate email</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password">
+          <mat-icon matSuffix>lock</mat-icon>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" class="full-width login-btn"
+          [disabled]="loginForm.invalid || isLoading">
+          <mat-icon *ngIf="!isLoading">login</mat-icon>
+          <span *ngIf="!isLoading">Login</span>
+          <span *ngIf="isLoading">Authenticating...</span>
+        </button>
+      </form>
+
+      <div class="divider">
+        <mat-divider></mat-divider>
+        <span>OR</span>
+        <mat-divider></mat-divider>
+      </div>
+
+      <div class="guest-section">
+        <p>Recruiter? Evaluator?</p>
+        <button mat-stroked-button color="accent" class="full-width guest-btn" type="button" (click)="onGuestLogin()"
+          [disabled]="isLoading">
+          <mat-icon>person_add</mat-icon>
+          One-Click Guest Login
+        </button>
+      </div>
+    </mat-card-content>
+
+    <mat-card-footer>
+      <p class="footer-note">© 2026 Verity Portal. Internal Use Only.</p>
+    </mat-card-footer>
+  </mat-card>
+</div>

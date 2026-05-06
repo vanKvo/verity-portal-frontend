@@ -1,0 +1,68 @@
+<div class="audit-container">
+  <mat-card class="config-card">
+    <mat-card-header>
+      <mat-card-title>Run Leaver/Mover Access Audit</mat-card-title>
+      <mat-card-subtitle>Reconcile HR records with system access logs</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="input-row">
+        <mat-form-field appearance="outline">
+          <mat-label>HR Master Job ID</mat-label>
+          <input matInput [(ngModel)]="hrJobId" placeholder="Enter Job ID">
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>IT Access Job ID</mat-label>
+          <input matInput [(ngModel)]="accessJobId" placeholder="Enter Job ID">
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary" [disabled]="isLoading() || !hrJobId() || !accessJobId()" (click)="runAudit()">
+        <mat-spinner diameter="20" *ngIf="isLoading()"></mat-spinner>
+        <span *ngIf="!isLoading()">Run Compliance Engine</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div class="results-section" *ngIf="violations().length > 0">
+    <div class="action-bar">
+      <h3>Compliance Violations Detected</h3>
+      <div class="export-buttons">
+        <button mat-button color="accent" (click)="exportCsv()">Export Sanitized CSV</button>
+        <button mat-raised-button color="accent" (click)="exportPdf()">Download Auditor PDF</button>
+      </div>
+    </div>
+
+    <table mat-table [dataSource]="violations()" class="mat-elevation-z8">
+      <ng-container matColumnDef="employee_id">
+        <th mat-header_cell *matHeaderCellDef> Employee ID </th>
+        <td mat-cell *matCellDef="let element"> {{element.employee_id}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="risk_level">
+        <th mat-header_cell *matHeaderCellDef> Risk Level </th>
+        <td mat-cell *matCellDef="let element"> 
+          <span class="risk-badge" [class.high]="element.risk_level === 'HIGH'">{{element.risk_level}}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="violation_type">
+        <th mat-header_cell *matHeaderCellDef> Type </th>
+        <td mat-cell *matCellDef="let element"> {{element.violation_type}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="details">
+        <th mat-header_cell *matHeaderCellDef> Details </th>
+        <td mat-cell *matCellDef="let element"> {{element.details}} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading() && violations().length === 0 && hrJobId() && accessJobId()">
+    <p>No compliance violations found for these job IDs.</p>
+  </div>
+</div>

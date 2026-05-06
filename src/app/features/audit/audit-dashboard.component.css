@@ -1,0 +1,63 @@
+.audit-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.config-card {
+  margin-bottom: 32px;
+}
+
+.input-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+mat-form-field {
+  flex: 1;
+}
+
+.results-section {
+  margin-top: 32px;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+table {
+  width: 100%;
+}
+
+.risk-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.risk-badge.high {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.empty-state {
+  text-align: center;
+  margin-top: 48px;
+  color: #666;
+  font-style: italic;
+}
+
+mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}

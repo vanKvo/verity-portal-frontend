@@ -5,6 +5,12 @@
   </mat-card-header>
 
   <mat-card-content>
+    <!-- Manual Mapping Prompt -->
+    <div *ngIf="!isReady() && headers().length > 0" class="manual-mapping-prompt" style="margin-bottom: 16px; padding: 12px; background: #fff3e0; border-radius: 4px; display: flex; align-items: center; gap: 8px;">
+      <mat-icon color="warn">warning</mat-icon>
+      <span>Some required fields could not be matched automatically. Please manually map the remaining fields to continue.</span>
+    </div>
+
     <table mat-table [dataSource]="headers()" class="full-width">
       <!-- Original Header Column -->
       <ng-container matColumnDef="original">
@@ -20,6 +26,7 @@
             <mat-select [value]="mappings()[header]" (selectionChange)="updateMapping(header, $event.value)">
               <mat-option *ngFor="let field of targetFields()" [value]="field">
                 {{ field }}
+                <span *ngIf="isRequired(field)" class="required-asterisk" style="color: red; margin-left: 4px;">*</span>
               </mat-option>
               <mat-option [value]="''">-- Ignore --</mat-option>
             </mat-select>
@@ -33,6 +40,10 @@
   </mat-card-content>
 
   <mat-card-actions align="end">
+    <button mat-button (click)="applyAutofill()" *ngIf="suggestions().length > 0">
+      <mat-icon>auto_fix_high</mat-icon>
+      Autofill High Confidence
+    </button>
     <button mat-button color="warn">Cancel</button>
     <button mat-raised-button color="primary" [disabled]="!isReady()" (click)="submitMappings()">
       <mat-icon>check_circle</mat-icon>

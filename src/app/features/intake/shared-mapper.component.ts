@@ -8,6 +8,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { HttpClient } from '@angular/common/http';
 
+export interface SchemaField {
+  field: string;
+  description: string;
+  required: boolean;
+}
+
 @Component({
   selector: 'app-shared-mapper',
   standalone: true,
@@ -28,6 +34,7 @@ export class SharedMapperComponent {
   
   // Inputs/Signals
   jobId = input.required<string>();
+  requiredSchema = input<SchemaField[]>([]);
   headers = signal<string[]>([]);
   suggestions = signal<any[]>([]); // Suggestions from backend
   
@@ -35,18 +42,34 @@ export class SharedMapperComponent {
   mappings = signal<Record<string, string>>({});
   
   // Available target fields for the current schema
-  targetFields = signal<string[]>([
-    'first_name', 'last_name', 'email', 'citizenship', 'role', 'project_id', 'clearance_level'
-  ]);
+  targetFields = computed(() => this.requiredSchema().map(f => f.field));
 
-  // Check if all required fields are mapped (mock logic for now)
-  isReady = computed(() => {
-    const currentMappings = Object.values(this.mappings());
-    return currentMappings.includes('first_name') && currentMappings.includes('last_name');
+  // Check if all required fields are mapped
+  missingRequiredFields = computed(() => {
+    const currentMappedTargets = Object.values(this.mappings());
+    return this.requiredSchema()
+      .filter(f => f.required && !currentMappedTargets.includes(f.field))
+      .map(f => f.field);
   });
+
+  isReady = computed(() => this.missingRequiredFields().length === 0);
+
+  applyAutofill() {
+    const newMappings: Record<string, string> = { ...this.mappings() };
+    this.suggestions().forEach(s => {
+      if (s.confidence > 70) {
+        newMappings[s.header] = s.target;
+      }
+    });
+    this.mappings.set(newMappings);
+  }
 
   updateMapping(header: string, target: string) {
     this.mappings.update(prev => ({ ...prev, [header]: target }));
+  }
+
+  isRequired(field: string): boolean {
+    return this.requiredSchema().find(f => f.field === field)?.required ?? false;
   }
 
   submitMappings() {

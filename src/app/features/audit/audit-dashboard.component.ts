@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { MatTableModule } from '@angular/material/table';
@@ -8,6 +8,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatStepperModule, MatStepper } from '@angular/material/stepper';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
+import { SharedMapperComponent, SchemaField } from '../intake/shared-mapper.component';
 
 @Component({
   selector: 'app-audit-dashboard',
@@ -20,24 +24,45 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatInputModule,
     MatFormFieldModule,
     FormsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatStepperModule,
+    MatSnackBarModule,
+    MatIconModule,
+    SharedMapperComponent
   ],
   templateUrl: './audit-dashboard.component.html',
   styleUrls: ['./audit-dashboard.component.css']
 })
 export class AuditDashboardComponent {
   private http = inject(HttpClient);
-  
+  private snackBar = inject(MatSnackBar);
+
+  @ViewChild('stepper') stepper!: MatStepper;
+  @ViewChild('hrMapper') hrMapper?: SharedMapperComponent;
+  @ViewChild('itMapper') itMapper?: SharedMapperComponent;
+
   hrJobId = signal('');
   accessJobId = signal('');
   isLoading = signal(false);
   violations = signal<any[]>([]);
-  
+
+  hrSchema: SchemaField[] = [
+    { field: 'employee_id', description: 'Unique Employee ID', required: true },
+    { field: 'hr_termination_date', description: 'Termination Date', required: true },
+    { field: 'full_name', description: 'Full Name', required: false }
+  ];
+
+  itSchema: SchemaField[] = [
+    { field: 'employee_id', description: 'Unique Employee ID', required: true },
+    { field: 'last_system_login', description: 'Last Login Timestamp', required: true },
+    { field: 'system_name', description: 'Target System', required: false }
+  ];
+
   displayedColumns: string[] = ['employee_id', 'risk_level', 'violation_type', 'details'];
-  
+
   runAudit() {
     if (!this.hrJobId() || !this.accessJobId()) return;
-    
+
     this.isLoading.set(true);
     this.http.post<any>('http://localhost:8000/audit/leaver-mover', {
       hr_job_id: this.hrJobId(),
@@ -48,24 +73,28 @@ export class AuditDashboardComponent {
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error('Audit failed', err);
+        const message = err.error?.message || 'An unexpected error occurred during audit.';
+        this.snackBar.open(message, 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
         this.isLoading.set(false);
       }
     });
   }
-  
+
   exportCsv() {
     this.http.post('http://localhost:8000/audit/export/csv', this.violations(), {
       responseType: 'blob'
     }).subscribe(blob => this.downloadFile(blob, 'audit_report.csv'));
   }
-  
+
   exportPdf() {
     this.http.post('http://localhost:8000/audit/export/pdf', this.violations(), {
       responseType: 'blob'
     }).subscribe(blob => this.downloadFile(blob, 'audit_report.pdf'));
   }
-  
+
   private downloadFile(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');

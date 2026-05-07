@@ -66,4 +66,57 @@ describe('AuditDashboardComponent', () => {
     expect(req.request.responseType).toBe('blob');
     req.flush(new Blob(['csv content'], { type: 'text/csv' }));
   });
+
+  it('should contain a mat-stepper with 3 steps', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    
+    const compiled = fixture.nativeElement as HTMLElement;
+    const stepper = compiled.querySelector('mat-stepper');
+    expect(stepper).toBeTruthy();
+    
+    // MatStepper headers usually have the mat-step-header class
+    const stepHeaders = compiled.querySelectorAll('.mat-step-header');
+    expect(stepHeaders.length).toBe(3);
+  });
+
+  it('should prevent moving to step 2 if HR mappings are incomplete', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    
+    const compiled = fixture.nativeElement as HTMLElement;
+    const nextButtons = compiled.querySelectorAll('button[matStepperNext]');
+    
+    // Initially index is 0
+    expect(component.stepper.selectedIndex).toBe(0);
+
+    // Simulate clicking next on Step 1
+    (nextButtons[0] as HTMLElement).click();
+    fixture.detectChanges();
+    
+    // Index should still be 0 because isReady() is false (no jobId set)
+    expect(component.stepper.selectedIndex).toBe(0);
+  });
+
+  it('should display a snackbar error message if the backend returns a structured error', () => {
+    // Set up a scenario where runAudit fails
+    component.hrJobId.set('job-1');
+    component.accessJobId.set('job-2');
+    fixture.detectChanges();
+
+    const snackBarSpy = jest.spyOn((component as any).snackBar, 'open');
+    
+    component.runAudit();
+    
+    const req = httpMock.expectOne('http://localhost:8000/audit/leaver-mover');
+    req.flush(
+      { error: 'Validation Failed', message: 'Custom Backend Error' },
+      { status: 400, statusText: 'Bad Request' }
+    );
+    
+    expect(snackBarSpy).toHaveBeenCalledWith('Custom Backend Error', 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
+  });
 });

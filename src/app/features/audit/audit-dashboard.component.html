@@ -5,22 +5,15 @@
       <div class="step-content">
         <h3>Step 1: HR Master Records</h3>
         <p>Upload and map the official source of truth for employee termination dates.</p>
-        
-        <div class="job-id-input" *ngIf="!hrJobId()">
-           <mat-form-field appearance="outline">
-            <mat-label>HR Master Job ID</mat-label>
-            <input matInput #hrInput placeholder="Enter Job ID from upload">
-            <button mat-icon-button matSuffix (click)="hrJobId.set(hrInput.value)">
-              <mat-icon>check</mat-icon>
-            </button>
-          </mat-form-field>
+
+        <div class="upload-section" *ngIf="!hrJobId()">
+          <app-file-upload label="Upload HR Master Record (CSV/Excel)" (onUploadSuccess)="handleHrUpload($event)">
+          </app-file-upload>
         </div>
 
-        <app-shared-mapper 
-          *ngIf="hrJobId()" 
-          #hrMapper
-          [jobId]="hrJobId()" 
-          [requiredSchema]="hrSchema">
+        <app-shared-mapper *ngIf="hrJobId()" #hrMapper [jobId]="hrJobId()" [requiredSchema]="hrSchema"
+          [headers]="hrHeaders()" [suggestions]="hrSuggestions()" schemaType="HR_ROSTER"
+          (onConfirm)="onMappingConfirmed()">
         </app-shared-mapper>
 
         <div class="stepper-actions">
@@ -35,21 +28,14 @@
         <h3>Step 2: IT System Access Logs</h3>
         <p>Upload and map the activity logs containing system login timestamps.</p>
 
-        <div class="job-id-input" *ngIf="!accessJobId()">
-          <mat-form-field appearance="outline">
-           <mat-label>IT Access Job ID</mat-label>
-           <input matInput #itInput placeholder="Enter Job ID from upload">
-           <button mat-icon-button matSuffix (click)="accessJobId.set(itInput.value)">
-             <mat-icon>check</mat-icon>
-           </button>
-         </mat-form-field>
-       </div>
+        <div class="upload-section" *ngIf="!itJobId()">
+          <app-file-upload label="Upload IT Activity Log (CSV/Excel)" (onUploadSuccess)="handleItUpload($event)">
+          </app-file-upload>
+        </div>
 
-        <app-shared-mapper 
-          *ngIf="accessJobId()" 
-          #itMapper
-          [jobId]="accessJobId()" 
-          [requiredSchema]="itSchema">
+        <app-shared-mapper *ngIf="itJobId()" #itMapper [jobId]="itJobId()" [requiredSchema]="itSchema"
+          [headers]="itHeaders()" [suggestions]="itSuggestions()" schemaType="IT_ACCESS"
+          (onConfirm)="onMappingConfirmed()">
         </app-shared-mapper>
 
         <div class="stepper-actions">
@@ -92,7 +78,7 @@
 
             <ng-container matColumnDef="risk_level">
               <th mat-header-cell *matHeaderCellDef> Risk Level </th>
-              <td mat-cell *matCellDef="let element"> 
+              <td mat-cell *matCellDef="let element">
                 <span class="risk-badge" [class.high]="element.risk_level === 'HIGH'">{{element.risk_level}}</span>
               </td>
             </ng-container>

@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, input } from '@angular/core';
+import { Component, signal, computed, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
@@ -6,7 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { HttpClient } from '@angular/common/http';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SharedMapperService } from './services/shared-mapper.service';
+import { IntakeSuggestion, ConfirmMappingResponse } from './models/intake.models';
 
 export interface SchemaField {
   field: string;
@@ -24,23 +26,29 @@ export interface SchemaField {
     MatFormFieldModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule
+    MatCardModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './shared-mapper.component.html',
   styleUrl: './shared-mapper.component.css'
 })
 export class SharedMapperComponent {
-  private http = inject(HttpClient);
-  
+  private mapperService = inject(SharedMapperService);
+
   // Inputs/Signals
   jobId = input.required<string>();
+  schemaType = input<string>();
   requiredSchema = input<SchemaField[]>([]);
-  headers = signal<string[]>([]);
-  suggestions = signal<any[]>([]); // Suggestions from backend
-  
+  headers = input<string[]>([]);
+  suggestions = input<IntakeSuggestion[]>([]); // Suggestions from backend
+
+  // Outputs
+  onConfirm = output<ConfirmMappingResponse>();
+
   // The current mappings: { original_header: target_field }
   mappings = signal<Record<string, string>>({});
-  
+  isProcessing = signal(false);
+
   // Available target fields for the current schema
   targetFields = computed(() => this.requiredSchema().map(f => f.field));
 
@@ -73,12 +81,19 @@ export class SharedMapperComponent {
   }
 
   submitMappings() {
-    if (!this.isReady()) return;
-    
-    this.http.post(`http://localhost:8000/intake/confirm/${this.jobId()}`, this.mappings())
+    if (!this.isReady() || this.isProcessing()) return;
+
+    this.isProcessing.set(true);
+    this.mapperService.confirmMapping(this.jobId(), this.mappings(), this.schemaType())
       .subscribe({
-        next: (res) => console.log('Mapping confirmed', res),
-        error: (err) => console.error('Mapping failed', err)
+        next: (res) => {
+          this.isProcessing.set(false);
+          this.onConfirm.emit(res);
+        },
+        error: (err) => {
+          this.isProcessing.set(false);
+          console.error('Data mapping failed', err);
+        }
       });
   }
 }

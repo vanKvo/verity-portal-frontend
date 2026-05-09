@@ -1,0 +1,33 @@
+<div 
+  class="dropzone" 
+  [class.dragging]="isDragging()" 
+  [class.uploading]="isUploading()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+  (click)="triggerFileInput()"
+>
+  <input 
+    #fileInput 
+    type="file" 
+    [accept]="allowedExtensions().join(',')" 
+    (change)="onFileSelectedFromInput($event)"
+    hidden
+  >
+
+  <div class="content" *ngIf="!isUploading()">
+    <mat-icon class="upload-icon">cloud_upload</mat-icon>
+    <p class="label">{{ label() }}</p>
+    <p class="hint">Allowed types: {{ allowedExtensions().join(', ') }}</p>
+  </div>
+
+  <div class="loading-overlay" *ngIf="isUploading()">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Uploading and analyzing document...</p>
+  </div>
+
+  <div class="error-msg" *ngIf="errorMessage()">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage() }}</span>
+  </div>
+</div>

@@ -12,6 +12,8 @@ import { MatStepperModule, MatStepper } from '@angular/material/stepper';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { SharedMapperComponent, SchemaField } from '../intake/shared-mapper.component';
+import { FileUploadComponent } from '../intake/file-upload.component';
+import { AuditService } from './services/audit.service';
 
 @Component({
   selector: 'app-audit-dashboard',
@@ -28,13 +30,14 @@ import { SharedMapperComponent, SchemaField } from '../intake/shared-mapper.comp
     MatStepperModule,
     MatSnackBarModule,
     MatIconModule,
-    SharedMapperComponent
+    SharedMapperComponent,
+    FileUploadComponent
   ],
   templateUrl: './audit-dashboard.component.html',
   styleUrls: ['./audit-dashboard.component.css']
 })
 export class AuditDashboardComponent {
-  private http = inject(HttpClient);
+  private auditService = inject(AuditService);
   private snackBar = inject(MatSnackBar);
 
   @ViewChild('stepper') stepper!: MatStepper;
@@ -42,9 +45,31 @@ export class AuditDashboardComponent {
   @ViewChild('itMapper') itMapper?: SharedMapperComponent;
 
   hrJobId = signal('');
-  accessJobId = signal('');
+  hrHeaders = signal<string[]>([]);
+  hrSuggestions = signal<any[]>([]);
+
+  itJobId = signal('');
+  itHeaders = signal<string[]>([]);
+  itSuggestions = signal<any[]>([]);
+
   isLoading = signal(false);
   violations = signal<any[]>([]);
+
+  handleHrUpload(event: { jobId: string, headers: string[], suggestions: any[] }) {
+    this.hrJobId.set(event.jobId);
+    this.hrHeaders.set(event.headers);
+    this.hrSuggestions.set(event.suggestions);
+  }
+
+  handleItUpload(event: { jobId: string, headers: string[], suggestions: any[] }) {
+    this.itJobId.set(event.jobId);
+    this.itHeaders.set(event.headers);
+    this.itSuggestions.set(event.suggestions);
+  }
+  
+  onMappingConfirmed() {
+    this.stepper.next();
+  }
 
   hrSchema: SchemaField[] = [
     { field: 'employee_id', description: 'Unique Employee ID', required: true },
@@ -61,14 +86,12 @@ export class AuditDashboardComponent {
   displayedColumns: string[] = ['employee_id', 'risk_level', 'violation_type', 'details'];
 
   runAudit() {
-    if (!this.hrJobId() || !this.accessJobId()) return;
+    if (!this.hrJobId() || !this.itJobId()) return;
 
     this.isLoading.set(true);
-    this.http.post<any>('http://localhost:8000/audit/leaver-mover', {
-      hr_job_id: this.hrJobId(),
-      access_job_id: this.accessJobId()
-    }).subscribe({
-      next: (response) => {
+    this.auditService.runAudit(this.hrJobId(), this.itJobId())
+      .subscribe({
+        next: (response) => {
         this.violations.set(response.violations);
         this.isLoading.set(false);
       },
@@ -84,15 +107,13 @@ export class AuditDashboardComponent {
   }
 
   exportCsv() {
-    this.http.post('http://localhost:8000/audit/export/csv', this.violations(), {
-      responseType: 'blob'
-    }).subscribe(blob => this.downloadFile(blob, 'audit_report.csv'));
+    this.auditService.exportCsv(this.violations())
+      .subscribe(blob => this.downloadFile(blob, 'audit_report.csv'));
   }
 
   exportPdf() {
-    this.http.post('http://localhost:8000/audit/export/pdf', this.violations(), {
-      responseType: 'blob'
-    }).subscribe(blob => this.downloadFile(blob, 'audit_report.pdf'));
+    this.auditService.exportPdf(this.violations())
+      .subscribe(blob => this.downloadFile(blob, 'audit_report.pdf'));
   }
 
   private downloadFile(blob: Blob, filename: string) {

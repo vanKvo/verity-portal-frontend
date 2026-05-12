@@ -1,10 +1,10 @@
-<mat-toolbar color="primary" style="background-color: var(--primary-color);" *ngIf="authService.isAuthenticated()">
-  <mat-icon style="margin-right: 12px;">verified_user</mat-icon>
-  <span>{{ title }}</span>
+<mat-toolbar color="primary" class="main-toolbar" *ngIf="authService.isAuthenticated()">
+  <mat-icon class="toolbar-icon" style="margin-right: 12px;">verified_user</mat-icon>
+  <span class="toolbar-title">{{ title }}</span>
   <span style="flex: 1 1 auto;"></span>
-  <span style="font-size: 14px; margin-right: 16px;">{{ authService.currentUser()?.email }}</span>
+  <span class="toolbar-email" style="font-size: 14px; margin-right: 16px;">{{ authService.currentUser()?.email }}</span>
   <button mat-icon-button (click)="authService.logout()">
-    <mat-icon>logout</mat-icon>
+    <mat-icon class="toolbar-icon">logout</mat-icon>
   </button>
 </mat-toolbar>
 

@@ -1,5 +1,6 @@
 import { Component, signal, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { SharedMapperComponent, SchemaField } from '../intake/shared-mapper.component';
 import { FileUploadComponent } from '../intake/file-upload.component';
 import { AuditService } from './services/audit.service';
+import { IntakeSuggestion, UploadResponse } from '../intake/models/intake.models';
 
 @Component({
   selector: 'app-audit-dashboard',
@@ -31,7 +33,8 @@ import { AuditService } from './services/audit.service';
     MatSnackBarModule,
     MatIconModule,
     SharedMapperComponent,
-    FileUploadComponent
+    FileUploadComponent,
+    RouterModule
   ],
   templateUrl: './audit-dashboard.component.html',
   styleUrls: ['./audit-dashboard.component.css']
@@ -46,27 +49,27 @@ export class AuditDashboardComponent {
 
   hrJobId = signal('');
   hrHeaders = signal<string[]>([]);
-  hrSuggestions = signal<any[]>([]);
+  hrSuggestions = signal<IntakeSuggestion[]>([]);
 
   itJobId = signal('');
   itHeaders = signal<string[]>([]);
-  itSuggestions = signal<any[]>([]);
+  itSuggestions = signal<IntakeSuggestion[]>([]);
 
   isLoading = signal(false);
   violations = signal<any[]>([]);
 
-  handleHrUpload(event: { jobId: string, headers: string[], suggestions: any[] }) {
-    this.hrJobId.set(event.jobId);
+  handleHrUpload(event: UploadResponse) {
+    this.hrJobId.set(event.job_id);
     this.hrHeaders.set(event.headers);
     this.hrSuggestions.set(event.suggestions);
   }
-
-  handleItUpload(event: { jobId: string, headers: string[], suggestions: any[] }) {
-    this.itJobId.set(event.jobId);
+  
+  handleItUpload(event: UploadResponse) {
+    this.itJobId.set(event.job_id);
     this.itHeaders.set(event.headers);
     this.itSuggestions.set(event.suggestions);
   }
-  
+
   onMappingConfirmed() {
     this.stepper.next();
   }
@@ -92,18 +95,18 @@ export class AuditDashboardComponent {
     this.auditService.runAudit(this.hrJobId(), this.itJobId())
       .subscribe({
         next: (response) => {
-        this.violations.set(response.violations);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        const message = err.error?.message || 'An unexpected error occurred during audit.';
-        this.snackBar.open(message, 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
-        this.isLoading.set(false);
-      }
-    });
+          this.violations.set(response.violations);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          const message = err.error?.message || 'An unexpected error occurred during audit.';
+          this.snackBar.open(message, 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+          this.isLoading.set(false);
+        }
+      });
   }
 
   exportCsv() {

@@ -97,6 +97,15 @@
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
           </table>
         </div>
+
+        <div class="stepper-actions" style="margin-top: 24px; display: flex; gap: 12px; align-items: center;">
+          <button mat-button matStepperPrevious>Back to IT Logs</button>
+          <span style="flex: 1 1 auto;"></span>
+          <button mat-stroked-button color="primary" routerLink="/dashboard">
+            <mat-icon>dashboard</mat-icon>
+            Return to Dashboard
+          </button>
+        </div>
       </div>
     </mat-step>
   </mat-stepper>

@@ -1,0 +1,8 @@
+.main-toolbar {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.toolbar-icon, .toolbar-title, .toolbar-email {
+  color: white !important;
+}

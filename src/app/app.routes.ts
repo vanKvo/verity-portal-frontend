@@ -19,6 +19,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/audit/audit-dashboard.component').then(m => m.AuditDashboardComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'itar',
+    loadComponent: () => import('./features/itar-audit/itar-dashboard.component').then(m => m.ItarDashboardComponent),
+    canActivate: [authGuard]
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'dashboard' }
 ];

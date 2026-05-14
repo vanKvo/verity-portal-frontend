@@ -1,0 +1,103 @@
+<div class="itar-container">
+  <header class="header">
+    <div class="header-top">
+      <h1>ITAR & Export Control Dashboard</h1>
+      <button mat-stroked-button color="primary" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        BACK TO DASHBOARD
+      </button>
+    </div>
+    <p class="subtitle">Compliance Reconciliation & Violation Monitoring</p>
+  </header>
+
+  <div *ngIf="alert()" class="alert-box" [ngClass]="alert()?.type">
+    <mat-icon class="alert-icon">{{ alert()?.type === 'error' ? 'error' : (alert()?.type === 'success' ? 'check_circle'
+      : 'info') }}</mat-icon>
+    <span class="alert-message">{{ alert()?.message }}</span>
+    <button mat-icon-button (click)="closeAlert()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="actions-row">
+    <mat-card class="action-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>upload_file</mat-icon>
+        <mat-card-title>Roster Ingestion</mat-card-title>
+        <mat-card-subtitle>Upload Program Management CSV</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-actions>
+        <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
+        <button mat-raised-button color="primary" (click)="fileInput.click()">
+          <mat-icon>cloud_upload</mat-icon>
+          UPLOAD ROSTER
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="action-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>rule</mat-icon>
+        <mat-card-title>Reconciliation Engine</mat-card-title>
+        <mat-card-subtitle>Scan for ITAR Mismatches</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-actions>
+        <button mat-raised-button color="accent" (click)="runAudit()">
+          <mat-icon>play_arrow</mat-icon>
+          RUN AUDIT
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <mat-card class="violation-card">
+    <mat-card-header>
+      <mat-card-title>Active Compliance Violations</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <table mat-table [dataSource]="violations()" class="mat-elevation-z0">
+        <ng-container matColumnDef="personnel_id">
+          <th mat-header-cell *matHeaderCellDef> Personnel ID </th>
+          <td mat-cell *matCellDef="let element"> {{element.personnel_id}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="project_id">
+          <th mat-header-cell *matHeaderCellDef> Project ID </th>
+          <td mat-cell *matCellDef="let element"> {{element.project_id}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef> Status </th>
+          <td mat-cell *matCellDef="let element">
+            <span class="status-badge" [class.open]="element.status === 'OPEN'">
+              {{element.status}}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="notes">
+          <th mat-header-cell *matHeaderCellDef> Detection Notes </th>
+          <td mat-cell *matCellDef="let element"> {{element.notes}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Actions </th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-button color="primary" (click)="resolve(element.id)">
+              RESOLVE
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="4" style="text-align: center; padding: 2rem;">
+            No active ITAR violations detected.
+          </td>
+        </tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

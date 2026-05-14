@@ -49,7 +49,7 @@ export class AuthService {
   }
 
   private handleAuthSuccess(response: AuthResponse, email: string) {
-    const user: User = { email, role: response.role };
+    const user: User = { email, roles: response.roles };
     localStorage.setItem('access_token', response.access_token);
     localStorage.setItem('user', JSON.stringify(user));
     this._user.set(user);

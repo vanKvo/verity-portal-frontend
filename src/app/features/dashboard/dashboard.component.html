@@ -1,0 +1,44 @@
+<div class="dashboard-container">
+  <header>
+    <h1>Dashboard</h1>
+    <p>Welcome, <strong>{{ authService.currentUser()?.email }}</strong>!</p>
+    <p>Roles: <span class="badge" *ngFor="let role of authService.currentUser()?.roles">{{ role }}</span></p>
+  </header>
+  
+  <div class="module-grid">
+    <!-- Compliance Engine / Audit -->
+    <mat-card class="module-card" routerLink="/audit">
+      <mat-card-header>
+        <mat-icon mat-card-avatar color="primary">security</mat-icon>
+        <mat-card-title>Compliance Engine</mat-card-title>
+        <mat-card-subtitle>Leaver/Mover Access Audit</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Run automated reconciliation between HR and IT records. Identify unauthorized access and generate auditor-ready reports.</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button color="primary">OPEN</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- ITAR & Export Control -->
+    <mat-card class="module-card" routerLink="/itar">
+      <mat-card-header>
+        <mat-icon mat-card-avatar color="accent">public</mat-icon>
+        <mat-card-title>ITAR & Export Control</mat-card-title>
+        <mat-card-subtitle>Citizenship & Project Sensitivity</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Manage project sensitivity levels and cross-reference personnel citizenship data to prevent export control violations.</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button color="accent">OPEN</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+  
+  <button mat-raised-button color="warn" class="logout-btn" (click)="authService.logout()">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
+</div>

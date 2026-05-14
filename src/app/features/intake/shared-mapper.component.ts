@@ -80,6 +80,22 @@ export class SharedMapperComponent {
     return this.requiredSchema().find(f => f.field === field)?.required ?? false;
   }
 
+  /**
+   * Returns system attributes that are not yet assigned to other headers.
+   * This prevents double-mapping of the same system field.
+   */
+  getAvailableOptions(currentHeader: string): string[] {
+    const allTargets = this.targetFields();
+    const currentMappings = this.mappings();
+
+    // Find all targets assigned to headers OTHER than the one we are currently looking at
+    const otherAssignedTargets = Object.entries(currentMappings)
+      .filter(([header, target]) => header !== currentHeader && target)
+      .map(([_, target]) => target);
+
+    return allTargets.filter(target => !otherAssignedTargets.includes(target));
+  }
+
   submitMappings() {
     if (!this.isReady() || this.isProcessing()) return;
 

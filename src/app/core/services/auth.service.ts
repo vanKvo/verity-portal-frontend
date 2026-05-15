@@ -16,6 +16,11 @@ export class AuthService {
   private _user = signal<User | null>(this.loadUserFromStorage());
   currentUser = computed(() => this._user());
   isAuthenticated = computed(() => !!this._user());
+  userRoles = computed(() => this._user()?.roles || []);
+
+  hasRole(role: string): boolean {
+    return this.userRoles().includes(role);
+  }
 
   login(credentials: { email: string; password: string }): any {
     const formData = new FormData();

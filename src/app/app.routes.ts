@@ -24,6 +24,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/itar-audit/itar-dashboard.component').then(m => m.ItarDashboardComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'data-hub',
+    loadComponent: () => import('./features/data-hub/data-hub.component').then(m => m.DataHubComponent),
+    canActivate: [authGuard]
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'dashboard' }
 ];

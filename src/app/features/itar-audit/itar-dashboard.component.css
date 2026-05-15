@@ -3,8 +3,47 @@
 .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
 h1 { font-weight: 800; color: #1a237e; margin: 0; }
 .subtitle { color: #666; font-size: 1.1rem; }
-.actions-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-.action-card { border-radius: 12px; border: 1px solid #e0e0e0; }
+.stepper-card { border-radius: 12px; margin-bottom: 2rem; overflow: hidden; }
+.step-content { padding: 2rem; text-align: center; }
+.step-actions { margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; }
+
+.summary-card { 
+  background: #f8f9fa; 
+  padding: 1.5rem; 
+  border-radius: 8px; 
+  max-width: 500px; 
+  margin: 0 auto;
+  border-left: 4px solid #4caf50;
+}
+.summary-card.has-errors { border-left-color: #f44336; }
+
+.stat-grid { display: flex; justify-content: space-around; margin: 1.5rem 0; }
+.stat-item { display: flex; flex-direction: column; }
+.stat-item .label { font-size: 0.9rem; color: #666; }
+.stat-item .value { font-size: 2rem; font-weight: 700; color: #1a237e; }
+
+.error-resolution {
+  background: #fff8e1;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ffe082;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #795548;
+}
+
+.error-log { text-align: left; background: #fff; padding: 1rem; border-radius: 4px; border: 1px solid #ffcdd2; margin-top: 1rem; }
+.error-header { color: #d32f2f; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+.error-scroll-area { max-height: 200px; overflow-y: auto; }
+.error-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.error-table th { text-align: left; background: #fafafa; padding: 4px 8px; color: #666; border-bottom: 2px solid #eee; }
+
+.completion-box { padding: 3rem; }
+.completion-box mat-icon { font-size: 4rem; width: 64px; height: 64px; margin-bottom: 1rem; }
+
+.spinner-container { padding: 2rem; }
+
 .violation-card { border-radius: 12px; }
 table { width: 100%; margin-top: 1rem; }
 .status-badge { padding: 4px 12px; border-radius: 16px; font-size: 0.8rem; font-weight: 600; }

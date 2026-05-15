@@ -11,44 +11,127 @@
   </header>
 
   <div *ngIf="alert()" class="alert-box" [ngClass]="alert()?.type">
-    <mat-icon class="alert-icon">{{ alert()?.type === 'error' ? 'error' : (alert()?.type === 'success' ? 'check_circle'
-      : 'info') }}</mat-icon>
-    <span class="alert-message">{{ alert()?.message }}</span>
-    <button mat-icon-button (click)="closeAlert()" class="close-btn">
-      <mat-icon>close</mat-icon>
-    </button>
+    <div class="alert-main" style="display: flex; align-items: center; width: 100%;">
+      <mat-icon class="alert-icon">{{ alert()?.type === 'error' ? 'error' : (alert()?.type === 'success' ? 'check_circle' : 'info') }}</mat-icon>
+      <span class="alert-message" style="flex-grow: 1;">{{ alert()?.message }}</span>
+      <button mat-icon-button (click)="closeAlert()" class="close-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <!-- Detailed Errors Log (Matches Data Hub pattern) -->
+    <div *ngIf="alert()?.errors?.length" class="errors-container" style="width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1); text-align: left;">
+      <p style="margin: 0 0 8px 0; font-size: 0.9rem; font-weight: 700;">ISSUE LOG (TOP {{ alert()?.errors?.length }}):</p>
+      <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; list-style-type: disc;">
+        <li *ngFor="let err of alert()?.errors">
+          <strong>Row {{ err.row }}:</strong> {{ err.error }}
+        </li>
+      </ul>
+    </div>
   </div>
 
-  <div class="actions-row">
-    <mat-card class="action-card">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>upload_file</mat-icon>
-        <mat-card-title>Roster Ingestion</mat-card-title>
-        <mat-card-subtitle>Upload Program Management CSV</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-actions>
-        <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
-        <button mat-raised-button color="primary" (click)="fileInput.click()">
-          <mat-icon>cloud_upload</mat-icon>
-          UPLOAD ROSTER
-        </button>
-      </mat-card-actions>
-    </mat-card>
+  <mat-card class="stepper-card">
+    <mat-stepper #stepper [linear]="true">
+      <!-- Step 1: Upload & Map -->
+      <mat-step [completed]="ingestionSummary() !== null">
+        <ng-template matStepLabel>Upload & Map Roster</ng-template>
+        <div class="step-content">
+          <div *ngIf="!headers().length">
+            <p>Upload Program Assignment (.csv, .xls) to begin.</p>
+            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" accept=".csv">
+            <button mat-raised-button color="primary" (click)="fileInput.click()">
+              <mat-icon>upload_file</mat-icon> UPLOAD FILE
+            </button>
+          </div>
 
-    <mat-card class="action-card">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>rule</mat-icon>
-        <mat-card-title>Reconciliation Engine</mat-card-title>
-        <mat-card-subtitle>Scan for ITAR Mismatches</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-actions>
-        <button mat-raised-button color="accent" (click)="runAudit()">
-          <mat-icon>play_arrow</mat-icon>
-          RUN AUDIT
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
+          <app-share-mapper *ngIf="headers().length > 0 && !ingestionSummary()" [headers]="headers()"
+            [targetAttributes]="targetAttributes" (mapped)="onMapped($event)" (cancelled)="reset()">
+          </app-share-mapper>
+
+          <div *ngIf="isUploading()" class="spinner-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Ingesting roster data...</p>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Step 2: Review Ingestion -->
+      <mat-step [completed]="ingestionSummary() !== null">
+        <ng-template matStepLabel>Review Ingestion</ng-template>
+        <div class="step-content" *ngIf="ingestionSummary() as summary">
+          <div class="summary-card" [class.has-errors]="summary.error_count > 0">
+            <h3>Ingestion Results</h3>
+            <div class="stat-grid">
+              <div class="stat-item">
+                <span class="label">Successfully Loaded</span>
+                <span class="value">{{ summary.success_count }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">Rejected Records</span>
+                <span class="value">{{ summary.error_count }}</span>
+              </div>
+            </div>
+
+            <div *ngIf="summary.error_count > 0" class="error-resolution">
+              <p><strong>How to fix:</strong> Most errors occur because personnel or projects are missing from the Data
+                Hub. Please ensure you have uploaded the Master Data files first.</p>
+            </div>
+
+            <div *ngIf="summary.errors.length > 0" class="error-log">
+              <p class="error-header">Issue Details (Row # matches CSV):</p>
+              <div class="error-scroll-area">
+                <table class="error-table">
+                  <thead>
+                    <tr>
+                      <th>Row</th>
+                      <th>Problem Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let err of summary.errors">
+                      <td style="padding: 4px 8px; border-bottom: 1px solid #eee;">{{ err.row }}</td>
+                      <td style="padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left;">{{ err.error }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="step-actions">
+            <button mat-button (click)="reset(); stepper.reset()">START OVER</button>
+            <button mat-raised-button color="primary" matStepperNext [disabled]="summary.success_count === 0">CONTINUE
+              TO AUDIT</button>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Step 3: Run Audit -->
+      <mat-step>
+        <ng-template matStepLabel>Run Reconciliation</ng-template>
+        <div class="step-content">
+          <p>The reconciliation engine will now cross-reference your uploaded roster against ITAR master data.</p>
+          <div class="step-actions">
+            <button mat-raised-button color="accent" (click)="runAudit(); stepper.next()">
+              <mat-icon>play_arrow</mat-icon> EXECUTE AUDIT ENGINE
+            </button>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Step 4: Completion -->
+      <mat-step>
+        <ng-template matStepLabel>Results</ng-template>
+        <div class="step-content">
+          <div class="completion-box">
+            <mat-icon color="success">check_circle</mat-icon>
+            <h3>Audit Workflow Finished</h3>
+            <p>Review any detected violations in the table below.</p>
+            <button mat-stroked-button (click)="reset(); stepper.reset()">NEW AUDIT</button>
+          </div>
+        </div>
+      </mat-step>
+    </mat-stepper>
+  </mat-card>
 
   <mat-card class="violation-card">
     <mat-card-header>
@@ -75,6 +158,15 @@
           </td>
         </ng-container>
 
+        <ng-container matColumnDef="resolution_reason">
+          <th mat-header-cell *matHeaderCellDef> Resolution Reason </th>
+          <td mat-cell *matCellDef="let element">
+            <span class="reason-text" *ngIf="element.resolution_reason">
+              {{element.resolution_reason}}
+            </span>
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="notes">
           <th mat-header-cell *matHeaderCellDef> Detection Notes </th>
           <td mat-cell *matCellDef="let element"> {{element.notes}} </td>
@@ -83,7 +175,8 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef> Actions </th>
           <td mat-cell *matCellDef="let element">
-            <button mat-button color="primary" (click)="resolve(element.id)">
+            <button mat-button color="primary" (click)="resolve(element.id)"
+              *ngIf="element.status === 'OPEN' && authService.hasRole('ROLE_ECO')">
               RESOLVE
             </button>
           </td>

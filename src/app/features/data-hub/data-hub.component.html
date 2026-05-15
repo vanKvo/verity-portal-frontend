@@ -1,0 +1,73 @@
+<div class="data-hub-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Data Hub - Master Data Management</mat-card-title>
+      <mat-card-subtitle>System of Record Ingestion</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Persistent Alert Message -->
+      <div *ngIf="alert()" class="alert-box" [ngClass]="alert()?.type">
+        <div class="alert-main">
+          <span class="message">{{ alert()?.message }}</span>
+          <button mat-icon-button (click)="closeAlert()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        
+        <!-- Detailed Errors -->
+        <div *ngIf="alert()?.errors?.length" class="errors-container">
+          <p class="error-title">Issue Log (Top {{ alert()?.errors?.length }}):</p>
+          <ul class="error-list">
+            <li *ngFor="let err of alert()?.errors">
+              <strong>Row {{ err.row }}:</strong> {{ err.error }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div *ngIf="isUploading()" class="loading-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Processing master data...</p>
+      </div>
+
+      <!-- Mapping UI -->
+      <app-share-mapper *ngIf="headers().length > 0 && !isUploading()" [headers]="headers()"
+        [targetAttributes]="currentAttributes" (mapped)="onMapped($event)" (cancelled)="reset()">
+      </app-share-mapper>
+
+      <mat-tab-group *ngIf="headers().length === 0 && !isUploading()">
+        <!-- HR Master Data Tab (ROLE_HR) -->
+        <mat-tab label="Personnel & HR" *ngIf="authService.hasRole('ROLE_HR')">
+          <div class="tab-content">
+            <h3>HR Master Records</h3>
+            <p>Upload citizenship status and termination dates for personnel.</p>
+            <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden accept=".csv">
+            <button mat-raised-button color="primary" (click)="hrInput.click()">
+              <mat-icon>upload</mat-icon> Upload
+            </button>
+          </div>
+        </mat-tab>
+
+        <!-- Project Sensitivity Tab (ROLE_ECO) -->
+        <mat-tab label="Project Governance" *ngIf="authService.hasRole('ROLE_ECO')">
+          <div class="tab-content">
+            <h3>Project Master Data</h3>
+            <p>Define and update project sensitivity classifications (ITAR, EAR99).</p>
+            <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden accept=".csv">
+            <button mat-raised-button color="accent" (click)="projInput.click()">
+              <mat-icon>upload</mat-icon> Upload
+            </button>
+          </div>
+        </mat-tab>
+
+        <!-- Informational Tab for others -->
+        <mat-tab label="Overview" *ngIf="!authService.hasRole('ROLE_HR') && !authService.hasRole('ROLE_ECO')">
+          <div class="tab-content">
+            <p>You do not have permissions to manage master data. Please contact an administrator.</p>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>

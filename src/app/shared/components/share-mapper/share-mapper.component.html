@@ -1,0 +1,28 @@
+<div class="mapper-container">
+  <h4>Map File Columns to System Attributes</h4>
+  <p class="subtitle">Please associate your CSV headers with the required system fields.</p>
+  
+  <div class="mapping-grid">
+    <div class="mapping-row" *ngFor="let attr of targetAttributes">
+      <div class="attribute-label">
+        {{ attr.label }} <span class="required" *ngIf="attr.required">*</span>
+      </div>
+      <mat-form-field appearance="outline">
+        <mat-label>Select Column</mat-label>
+        <mat-select [(ngModel)]="mapping[attr.key]" (selectionChange)="onMappingChange()">
+          <mat-option [value]="''">-- Ignore --</mat-option>
+          <mat-option *ngFor="let header of headers" [value]="header">
+            {{ header }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button mat-raised-button color="primary" [disabled]="!isMappingValid()" (click)="confirmMapping()">
+      Confirm & Upload
+    </button>
+    <button mat-button (click)="cancel()">Cancel</button>
+  </div>
+</div>

@@ -1,4 +1,14 @@
 <div class="audit-container">
+  <header class="header">
+    <div class="header-top">
+      <h1>Compliance Engine - Leaver/Mover Access Audit</h1>
+      <button mat-stroked-button color="primary" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        BACK TO DASHBOARD
+      </button>
+    </div>
+  </header>
+
   <mat-stepper linear #stepper>
     <!-- Step 1: HR Master Upload & Mapping -->
     <mat-step [completed]="hrMapper?.isReady() ?? false" label="HR Records">

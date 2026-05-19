@@ -4,13 +4,13 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { 
-    path: 'login', 
+  {
+    path: 'login',
     component: LoginComponent,
-    canActivate: [guestGuard] 
+    canActivate: [guestGuard]
   },
-  { 
-    path: 'dashboard', 
+  {
+    path: 'dashboard',
     component: DashboardComponent,
     canActivate: [authGuard]
   },

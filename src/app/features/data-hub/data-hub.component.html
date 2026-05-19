@@ -1,7 +1,16 @@
 <div class="data-hub-container">
+  <header class="header">
+    <div class="header-top">
+      <h1>Data Hub - Master Data Ingestion</h1>
+      <button mat-stroked-button color="primary" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        BACK TO DASHBOARD
+      </button>
+    </div>
+  </header>
+
   <mat-card>
     <mat-card-header>
-      <mat-card-title>Data Hub - Master Data Management</mat-card-title>
       <mat-card-subtitle>System of Record Ingestion</mat-card-subtitle>
     </mat-card-header>
 
@@ -14,7 +23,7 @@
             <mat-icon>close</mat-icon>
           </button>
         </div>
-        
+
         <!-- Detailed Errors -->
         <div *ngIf="alert()?.errors?.length" class="errors-container">
           <p class="error-title">Issue Log (Top {{ alert()?.errors?.length }}):</p>
@@ -42,7 +51,7 @@
           <div class="tab-content">
             <h3>HR Master Records</h3>
             <p>Upload citizenship status and termination dates for personnel.</p>
-            <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden accept=".csv">
+            <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden accept=".csv,.xlsx,.xls,.numbers">
             <button mat-raised-button color="primary" (click)="hrInput.click()">
               <mat-icon>upload</mat-icon> Upload
             </button>
@@ -54,7 +63,7 @@
           <div class="tab-content">
             <h3>Project Master Data</h3>
             <p>Define and update project sensitivity classifications (ITAR, EAR99).</p>
-            <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden accept=".csv">
+            <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden accept=".csv,.xlsx,.xls,.numbers">
             <button mat-raised-button color="accent" (click)="projInput.click()">
               <mat-icon>upload</mat-icon> Upload
             </button>

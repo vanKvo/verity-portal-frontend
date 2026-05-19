@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap, catchError, of } from 'rxjs';
 import { AuthResponse, User } from '../models/auth.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,8 @@ import { AuthResponse, User } from '../models/auth.models';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = 'http://localhost:8000/auth';
+  private config = inject(ConfigService);
+  private apiUrl = `${this.config.apiUrl}/auth`;
 
   // Signals for state management
   private _user = signal<User | null>(this.loadUserFromStorage());

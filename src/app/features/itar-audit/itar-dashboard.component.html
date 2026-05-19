@@ -1,7 +1,7 @@
 <div class="itar-container">
   <header class="header">
     <div class="header-top">
-      <h1>ITAR & Export Control Dashboard</h1>
+      <h1>ITAR & Export Control - Citizenship and Project Sensivity</h1>
       <button mat-stroked-button color="primary" routerLink="/dashboard">
         <mat-icon>arrow_back</mat-icon>
         BACK TO DASHBOARD
@@ -12,16 +12,19 @@
 
   <div *ngIf="alert()" class="alert-box" [ngClass]="alert()?.type">
     <div class="alert-main" style="display: flex; align-items: center; width: 100%;">
-      <mat-icon class="alert-icon">{{ alert()?.type === 'error' ? 'error' : (alert()?.type === 'success' ? 'check_circle' : 'info') }}</mat-icon>
+      <mat-icon class="alert-icon">{{ alert()?.type === 'error' ? 'error' : (alert()?.type === 'success' ?
+        'check_circle' : 'info') }}</mat-icon>
       <span class="alert-message" style="flex-grow: 1;">{{ alert()?.message }}</span>
       <button mat-icon-button (click)="closeAlert()" class="close-btn">
         <mat-icon>close</mat-icon>
       </button>
     </div>
-    
+
     <!-- Detailed Errors Log (Matches Data Hub pattern) -->
-    <div *ngIf="alert()?.errors?.length" class="errors-container" style="width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1); text-align: left;">
-      <p style="margin: 0 0 8px 0; font-size: 0.9rem; font-weight: 700;">ISSUE LOG (TOP {{ alert()?.errors?.length }}):</p>
+    <div *ngIf="alert()?.errors?.length" class="errors-container"
+      style="width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1); text-align: left;">
+      <p style="margin: 0 0 8px 0; font-size: 0.9rem; font-weight: 700;">ISSUE LOG (TOP {{ alert()?.errors?.length }}):
+      </p>
       <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; list-style-type: disc;">
         <li *ngFor="let err of alert()?.errors">
           <strong>Row {{ err.row }}:</strong> {{ err.error }}
@@ -37,8 +40,9 @@
         <ng-template matStepLabel>Upload & Map Roster</ng-template>
         <div class="step-content">
           <div *ngIf="!headers().length">
-            <p>Upload Program Assignment (.csv, .xls) to begin.</p>
-            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" accept=".csv">
+            <p>Upload Program Assignment (.csv, .xls, .xlsx, or .numbers) to begin.</p>
+            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
+              accept=".csv,.xlsx,.xls,.numbers">
             <button mat-raised-button color="primary" (click)="fileInput.click()">
               <mat-icon>upload_file</mat-icon> UPLOAD FILE
             </button>
@@ -90,7 +94,8 @@
                   <tbody>
                     <tr *ngFor="let err of summary.errors">
                       <td style="padding: 4px 8px; border-bottom: 1px solid #eee;">{{ err.row }}</td>
-                      <td style="padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left;">{{ err.error }}</td>
+                      <td style="padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left;">{{ err.error }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -111,7 +116,7 @@
         <div class="step-content">
           <p>The reconciliation engine will now cross-reference your uploaded roster against ITAR master data.</p>
           <div class="step-actions">
-            <button mat-raised-button color="accent" (click)="runAudit(); stepper.next()">
+            <button mat-raised-button color="accent" (click)="runAudit()">
               <mat-icon>play_arrow</mat-icon> EXECUTE AUDIT ENGINE
             </button>
           </div>
@@ -134,63 +139,175 @@
   </mat-card>
 
   <mat-card class="violation-card">
-    <mat-card-header>
-      <mat-card-title>Active Compliance Violations</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <table mat-table [dataSource]="violations()" class="mat-elevation-z0">
-        <ng-container matColumnDef="personnel_id">
-          <th mat-header-cell *matHeaderCellDef> Personnel ID </th>
-          <td mat-cell *matCellDef="let element"> {{element.personnel_id}} </td>
-        </ng-container>
+    <mat-tab-group>
+      <mat-tab label="Active Violations">
+        <div class="tab-content" style="padding-top: 1rem;">
+          <table mat-table [dataSource]="activeViolations()" class="mat-elevation-z0">
+            <ng-container matColumnDef="employee_id">
+              <th mat-header-cell *matHeaderCellDef> Employee ID </th>
+              <td mat-cell *matCellDef="let element"> {{element.employee_id}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="project_id">
-          <th mat-header-cell *matHeaderCellDef> Project ID </th>
-          <td mat-cell *matCellDef="let element"> {{element.project_id}} </td>
-        </ng-container>
+            <ng-container matColumnDef="project_id">
+              <th mat-header-cell *matHeaderCellDef> Project ID </th>
+              <td mat-cell *matCellDef="let element"> {{element.project_id}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef> Status </th>
-          <td mat-cell *matCellDef="let element">
-            <span class="status-badge" [class.open]="element.status === 'OPEN'">
-              {{element.status}}
-            </span>
-          </td>
-        </ng-container>
+            <ng-container matColumnDef="citizenship">
+              <th mat-header-cell *matHeaderCellDef> Citizenship </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="badge citizenship" [ngClass]="element.citizenship">
+                  {{element.citizenship}}
+                </span>
+              </td>
+            </ng-container>
 
-        <ng-container matColumnDef="resolution_reason">
-          <th mat-header-cell *matHeaderCellDef> Resolution Reason </th>
-          <td mat-cell *matCellDef="let element">
-            <span class="reason-text" *ngIf="element.resolution_reason">
-              {{element.resolution_reason}}
-            </span>
-          </td>
-        </ng-container>
+            <ng-container matColumnDef="sensitivity">
+              <th mat-header-cell *matHeaderCellDef> Project Sensitivity </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="badge sensitivity ITAR_RESTRICTED">
+                  {{element.sensitivity}}
+                </span>
+              </td>
+            </ng-container>
 
-        <ng-container matColumnDef="notes">
-          <th mat-header-cell *matHeaderCellDef> Detection Notes </th>
-          <td mat-cell *matCellDef="let element"> {{element.notes}} </td>
-        </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="status-badge open">
+                  {{element.status}}
+                </span>
+              </td>
+            </ng-container>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef> Actions </th>
-          <td mat-cell *matCellDef="let element">
-            <button mat-button color="primary" (click)="resolve(element.id)"
-              *ngIf="element.status === 'OPEN' && authService.hasRole('ROLE_ECO')">
-              RESOLVE
-            </button>
-          </td>
-        </ng-container>
+            <ng-container matColumnDef="notes">
+              <th mat-header-cell *matHeaderCellDef> Detection Notes </th>
+              <td mat-cell *matCellDef="let element"> {{element.notes}} </td>
+            </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef> Actions </th>
+              <td mat-cell *matCellDef="let element">
+                <button mat-flat-button color="primary" (click)="openResolveDialog(element)"
+                  *ngIf="authService.hasRole('ROLE_ECO')">
+                  <mat-icon>check</mat-icon> RESOLVE
+                </button>
+              </td>
+            </ng-container>
 
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="4" style="text-align: center; padding: 2rem;">
-            No active ITAR violations detected.
-          </td>
-        </tr>
-      </table>
-    </mat-card-content>
+            <tr mat-header-row *matHeaderRowDef="activeColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: activeColumns;"></tr>
+
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell" [attr.colspan]="activeColumns.length" style="text-align: center; padding: 2.5rem;">
+                No active ITAR violations detected.
+              </td>
+            </tr>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Resolved Violations">
+        <div class="tab-content" style="padding-top: 1rem;">
+          <table mat-table [dataSource]="resolvedViolations()" class="mat-elevation-z0">
+            <ng-container matColumnDef="employee_id">
+              <th mat-header-cell *matHeaderCellDef> Employee ID </th>
+              <td mat-cell *matCellDef="let element"> {{element.employee_id}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="project_id">
+              <th mat-header-cell *matHeaderCellDef> Project ID </th>
+              <td mat-cell *matCellDef="let element"> {{element.project_id}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="citizenship">
+              <th mat-header-cell *matHeaderCellDef> Citizenship </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="badge citizenship" [ngClass]="element.citizenship">
+                  {{element.citizenship}}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="sensitivity">
+              <th mat-header-cell *matHeaderCellDef> Project Sensitivity </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="badge sensitivity ITAR_RESTRICTED">
+                  {{element.sensitivity}}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="status-badge resolved">
+                  {{element.status}}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="resolution_reason">
+              <th mat-header-cell *matHeaderCellDef> Resolution Reason </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="reason-badge">
+                  {{element.resolution_reason}}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="notes">
+              <th mat-header-cell *matHeaderCellDef> Detection Notes </th>
+              <td mat-cell *matCellDef="let element"> {{element.notes}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="resolvedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: resolvedColumns;"></tr>
+
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell" [attr.colspan]="resolvedColumns.length" style="text-align: center; padding: 2.5rem;">
+                No resolved violations.
+              </td>
+            </tr>
+          </table>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </mat-card>
+
+  <!-- Resolution Overlay Modal -->
+  <div class="dialog-backdrop" *ngIf="resolvingViolation() as violation">
+    <mat-card class="dialog-card">
+      <div class="dialog-header">
+        <mat-icon color="primary">gavel</mat-icon>
+        <h2>Resolve ITAR Compliance Violation</h2>
+      </div>
+
+      <div class="dialog-body">
+        <div class="violation-summary">
+          <p><strong>Employee:</strong> {{violation.employee_id}} ({{violation.citizenship}})</p>
+          <p><strong>Project:</strong> {{violation.project_id}} ({{violation.sensitivity}})</p>
+        </div>
+
+        <p class="dialog-instruction">
+          Please enter the resolution justification (e.g., DSP-5 Export License ID, Personnel Citizenship correction
+          reference, or Project Sensitivity update approval).
+          <strong>This reason is required to finalize manual resolution.</strong>
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Resolution Justification / License Reference</mat-label>
+          <textarea matInput rows="3" [(ngModel)]="resolutionReason"
+            placeholder="Enter resolution justification..."></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-actions">
+        <button mat-button (click)="closeResolveDialog()">CANCEL</button>
+        <button mat-raised-button color="primary" [disabled]="!resolutionReason.trim()" (click)="submitResolution()">
+          CONFIRM RESOLUTION
+        </button>
+      </div>
+    </mat-card>
+  </div>
 </div>

@@ -1,18 +1,21 @@
 export interface ProjectAssignment {
   id: string;
   project_id: string;
-  personnel_id: string;
+  employee_id: string;
   last_verified_at: string;
 }
 
 export interface ComplianceViolation {
   id: string;
-  personnel_id: string;
+  employee_id: string;
   project_id: string;
+  citizenship: string;
+  sensitivity: string;
   status: 'OPEN' | 'RESOLVED';
   resolution_reason?: string;
   notes: string;
   created_at: string;
+  resolved_at?: string;
 }
 
 export interface RosterUploadResponse {

@@ -71,3 +71,124 @@ table { width: 100%; margin-top: 1rem; }
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Premium Badges styling */
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge.citizenship {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1976d2;
+}
+.badge.citizenship.US_CITIZEN {
+  background: rgba(76, 175, 80, 0.1);
+  color: #388e3c;
+}
+.badge.citizenship.FOREIGN_NATIONAL {
+  background: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+}
+.badge.sensitivity {
+  background: rgba(255, 152, 0, 0.1);
+  color: #f57c00;
+}
+.status-badge.resolved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.reason-badge {
+  background: #f1f3f4;
+  color: #5f6368;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+/* Premium Dialog Overlay Styles */
+.dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dialog-card {
+  width: 100%;
+  max-width: 550px;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: #ffffff;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a237e;
+}
+.dialog-header mat-icon {
+  font-size: 2rem;
+  width: 32px;
+  height: 32px;
+}
+
+.dialog-body {
+  margin-bottom: 2rem;
+}
+.violation-summary {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  border-left: 4px solid #1a237e;
+}
+.violation-summary p {
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+}
+.dialog-instruction {
+  color: #5f6368;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+}
+.full-width {
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.9) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}

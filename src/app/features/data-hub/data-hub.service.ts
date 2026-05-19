@@ -31,4 +31,10 @@ export class DataHubService {
     }
     return this.http.post<DataHubResponse>(`${this.baseUrl}/projects/upload`, formData);
   }
+
+  parseHeaders(file: File): Observable<{ headers: string[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ headers: string[] }>(`${this.baseUrl}/parse-headers`, formData);
+  }
 }

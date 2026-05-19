@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/services/auth.service';
 import { DataHubService } from './data-hub.service';
 import { ShareMapperComponent, TargetAttribute } from '../../shared/components/share-mapper/share-mapper.component';
+import { RouterModule } from '@angular/router';
 
 import { ColumnMapping, DataHubResponse } from './models/data-hub.models';
 
@@ -21,7 +22,8 @@ import { ColumnMapping, DataHubResponse } from './models/data-hub.models';
     MatIconModule,
     MatTabsModule,
     MatProgressSpinnerModule,
-    ShareMapperComponent
+    ShareMapperComponent,
+    RouterModule
   ],
   templateUrl: './data-hub.component.html',
   styleUrls: ['./data-hub.component.css']
@@ -66,17 +68,17 @@ export class DataHubComponent {
     this.currentFile.set(file);
     this.currentType.set(type);
 
-    // Parse headers
-    const reader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      const text = e.target?.result as string;
-      if (text) {
-        const firstLine = text.split('\n')[0];
-        const extractedHeaders = firstLine.split(',').map((h: string) => h.trim().replace(/^"|"$/g, ''));
-        this.headers.set(extractedHeaders);
+    this.isUploading.set(true);
+    this.dataHubService.parseHeaders(file).subscribe({
+      next: (res) => {
+        this.headers.set(res.headers);
+        this.isUploading.set(false);
+      },
+      error: (err) => {
+        this.isUploading.set(false);
+        this.alert.set({ message: 'Failed to extract file headers: ' + (err.error?.detail || err.message), type: 'error' });
       }
-    };
-    reader.readAsText(file.slice(0, 5000)); // Read first 5KB
+    });
   }
 
   onMapped(mapping: ColumnMapping) {
@@ -95,15 +97,28 @@ export class DataHubComponent {
     upload$.subscribe({
       next: (response: DataHubResponse) => {
         const msg = `${type === 'personnel' ? 'HR' : 'Project'} Data Uploaded: ${response.success_count} success, ${response.error_count} errors`;
-        this.alert.set({ 
-          message: msg, 
+        this.alert.set({
+          message: msg,
           type: response.error_count > 0 ? 'info' : 'success',
-          errors: response.errors 
+          errors: response.errors
         });
         this.reset();
       },
-      error: () => {
-        this.alert.set({ message: 'Upload Failed. Please check the file format and try again.', type: 'error' });
+      error: (err) => {
+        let errMsg = 'Upload Failed: An unexpected error occurred. Please contact the website administrator for support.';
+        if (err.status === 400) {
+          errMsg = 'Upload Failed: Invalid file format or invalid columns. Please check that you are uploading a valid CSV spreadsheet and try again.';
+          if (err.error?.detail) {
+            errMsg += ` (${err.error.detail})`;
+          }
+        } else if (err.status === 401 || err.status === 403) {
+          errMsg = 'Upload Failed: Insufficient permissions or session expired. Please log in again.';
+        } else if (err.error?.detail) {
+          errMsg = 'Upload Failed: ' + err.error.detail;
+        } else if (err.message) {
+          errMsg = 'Upload Failed: ' + err.message;
+        }
+        this.alert.set({ message: errMsg, type: 'error' });
         this.isUploading.set(false);
       }
     });

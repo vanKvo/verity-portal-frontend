@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../../core/services/config.service';
 
-import { ColumnMapping, DataHubResponse } from './models/data-hub.models';
+import { ColumnMapping, DataHubResponse, SyncStatus } from './models/data-hub.models';
 
 @Injectable({
   providedIn: 'root'
@@ -36,5 +36,9 @@ export class DataHubService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ headers: string[] }>(`${this.baseUrl}/parse-headers`, formData);
+  }
+
+  getSyncStatus(): Observable<SyncStatus> {
+    return this.http.get<SyncStatus>(`${this.baseUrl}/sync-status`);
   }
 }

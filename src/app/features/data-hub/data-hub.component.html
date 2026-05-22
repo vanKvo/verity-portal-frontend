@@ -51,7 +51,17 @@
           <div class="tab-content">
             <h3>HR Master Records</h3>
             <p>Upload citizenship status and termination dates for personnel.</p>
-            <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden accept=".csv,.xlsx,.xls,.numbers">
+
+            <div class="last-sync-badge" *ngIf="syncStatus()?.personnel_last_sync" style="display: inline-flex; align-items: center; gap: 8px;">
+              <mat-icon>history</mat-icon>
+              <span>Last Sync: {{ syncStatus()?.personnel_last_sync | date:'medium' }}</span>
+              <button mat-icon-button (click)="loadSyncStatus()" style="width: 24px; height: 24px; line-height: 24px; display: inline-flex; align-items: center; justify-content: center;">
+                <mat-icon style="font-size: 16px; width: 16px; height: 16px; line-height: 16px; margin: 0;">refresh</mat-icon>
+              </button>
+            </div>
+
+            <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden
+              accept=".csv,.xlsx,.xls,.numbers">
             <button mat-raised-button color="primary" (click)="hrInput.click()">
               <mat-icon>upload</mat-icon> Upload
             </button>
@@ -63,7 +73,17 @@
           <div class="tab-content">
             <h3>Project Master Data</h3>
             <p>Define and update project sensitivity classifications (ITAR, EAR99).</p>
-            <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden accept=".csv,.xlsx,.xls,.numbers">
+
+            <div class="last-sync-badge" *ngIf="syncStatus()?.projects_last_sync" style="display: inline-flex; align-items: center; gap: 8px;">
+              <mat-icon>history</mat-icon>
+              <span>Last Sync: {{ syncStatus()?.projects_last_sync | date:'medium' }}</span>
+              <button mat-icon-button (click)="loadSyncStatus()" style="width: 24px; height: 24px; line-height: 24px; display: inline-flex; align-items: center; justify-content: center;">
+                <mat-icon style="font-size: 16px; width: 16px; height: 16px; line-height: 16px; margin: 0;">refresh</mat-icon>
+              </button>
+            </div>
+
+            <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden
+              accept=".csv,.xlsx,.xls,.numbers">
             <button mat-raised-button color="accent" (click)="projInput.click()">
               <mat-icon>upload</mat-icon> Upload
             </button>

@@ -12,3 +12,8 @@ export interface DataHubResponse {
   error_count: number;
   errors: IngestionError[];
 }
+
+export interface SyncStatus {
+  personnel_last_sync: string | null;
+  projects_last_sync: string | null;
+}

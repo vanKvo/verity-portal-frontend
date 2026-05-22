@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,7 +10,7 @@ import { DataHubService } from './data-hub.service';
 import { ShareMapperComponent, TargetAttribute } from '../../shared/components/share-mapper/share-mapper.component';
 import { RouterModule } from '@angular/router';
 
-import { ColumnMapping, DataHubResponse } from './models/data-hub.models';
+import { ColumnMapping, DataHubResponse, SyncStatus } from './models/data-hub.models';
 
 @Component({
   selector: 'app-data-hub',
@@ -28,9 +28,12 @@ import { ColumnMapping, DataHubResponse } from './models/data-hub.models';
   templateUrl: './data-hub.component.html',
   styleUrls: ['./data-hub.component.css']
 })
-export class DataHubComponent {
+export class DataHubComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   dataHubService = inject(DataHubService);
+
+  // Polling State
+  private pollingInterval: any;
 
   // Mapping State
   currentFile = signal<File | null>(null);
@@ -38,6 +41,7 @@ export class DataHubComponent {
   headers = signal<string[]>([]);
   isUploading = signal(false);
   alert = signal<{ message: string; type: 'success' | 'error' | 'info'; errors?: any[] } | null>(null);
+  syncStatus = signal<SyncStatus | null>(null);
 
   readonly personnelAttributes: TargetAttribute[] = [
     { key: 'employee_id', label: 'Employee ID', required: true },
@@ -58,6 +62,25 @@ export class DataHubComponent {
 
   get currentAttributes(): TargetAttribute[] {
     return this.currentType() === 'personnel' ? this.personnelAttributes : this.projectAttributes;
+  }
+
+  ngOnInit() {
+    this.loadSyncStatus();
+    // Periodically poll for S3 webhook synchronizations that occur out-of-band in the background
+    // this.pollingInterval = setInterval(() => this.loadSyncStatus(), 10000);
+  }
+
+  ngOnDestroy() {
+    // if (this.pollingInterval) {
+    //   clearInterval(this.pollingInterval);
+    // }
+  }
+
+  loadSyncStatus() {
+    this.dataHubService.getSyncStatus().subscribe({
+      next: (status) => this.syncStatus.set(status),
+      error: (err) => console.error('Failed to load sync status', err)
+    });
   }
 
   onFileSelected(event: Event, type: 'personnel' | 'projects') {
@@ -103,6 +126,7 @@ export class DataHubComponent {
           errors: response.errors
         });
         this.reset();
+        this.loadSyncStatus();
       },
       error: (err) => {
         let errMsg = 'Upload Failed: An unexpected error occurred. Please contact the website administrator for support.';

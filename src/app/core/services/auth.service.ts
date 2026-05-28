@@ -49,10 +49,39 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    this._user.set(null);
-    this.router.navigate(['/login']);
+    this.http.post(`${this.apiUrl}/logout`, {}).pipe(
+      catchError(err => {
+        console.warn('Backend logout failed', err);
+        return of(null);
+      })
+    ).subscribe({
+      next: () => {},
+      error: () => {},
+      complete: () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        this._user.set(null);
+        this.router.navigate(['/login']);
+      }
+    });
+  }
+
+  refreshToken() {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {}).pipe(
+      tap(response => {
+        localStorage.setItem('access_token', response.access_token);
+        const user = this._user();
+        if (user) {
+          user.roles = response.roles;
+          localStorage.setItem('user', JSON.stringify(user));
+          this._user.set({ ...user });
+        }
+      }),
+      catchError(error => {
+        console.error('Silent refresh failed', error);
+        throw error;
+      })
+    );
   }
 
   private handleAuthSuccess(response: AuthResponse, email: string) {

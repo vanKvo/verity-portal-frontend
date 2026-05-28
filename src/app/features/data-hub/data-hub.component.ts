@@ -37,11 +37,12 @@ export class DataHubComponent implements OnInit, OnDestroy {
 
   // Mapping State
   currentFile = signal<File | null>(null);
-  currentType = signal<'personnel' | 'projects' | null>(null);
+  currentType = signal<'personnel' | 'projects' | 'procurement' | 'inventory' | null>(null);
   headers = signal<string[]>([]);
   isUploading = signal(false);
   alert = signal<{ message: string; type: 'success' | 'error' | 'info'; errors?: any[] } | null>(null);
   syncStatus = signal<SyncStatus | null>(null);
+  activeSidebarTab = signal<'personnel' | 'projects' | 'procurement' | 'inventory'>('personnel');
 
   readonly personnelAttributes: TargetAttribute[] = [
     { key: 'employee_id', label: 'Employee ID', required: true },
@@ -60,14 +61,48 @@ export class DataHubComponent implements OnInit, OnDestroy {
     { key: 'export_control_status', label: 'Export Control Status', required: false },
   ];
 
+  readonly procurementAttributes: TargetAttribute[] = [
+    { key: 'po_number', label: 'PO Number', required: true },
+    { key: 'description', label: 'Description', required: false },
+    { key: 'purchase_date', label: 'Purchase Date', required: false },
+    { key: 'vendor', label: 'Vendor Name', required: false },
+    { key: 'asset_category', label: 'Asset Category', required: false },
+    { key: 'quantity', label: 'Quantity', required: false },
+    { key: 'unit_price', label: 'Unit Price', required: false },
+    { key: 'total_cost', label: 'Total Cost', required: false },
+    { key: 'status', label: 'Status', required: false },
+  ];
+
+  readonly inventoryAttributes: TargetAttribute[] = [
+    { key: 'asset_tag', label: 'Asset Tag', required: true },
+    { key: 'po_number', label: 'PO Number', required: false },
+    { key: 'serial_number', label: 'Serial Number', required: false },
+    { key: 'assigned_employee_id', label: 'Assigned To', required: false },
+    { key: 'status', label: 'Status', required: false },
+  ];
+
   get currentAttributes(): TargetAttribute[] {
-    return this.currentType() === 'personnel' ? this.personnelAttributes : this.projectAttributes;
+    const type = this.currentType();
+    if (type === 'personnel') return this.personnelAttributes;
+    if (type === 'projects') return this.projectAttributes;
+    if (type === 'procurement') return this.procurementAttributes;
+    if (type === 'inventory') return this.inventoryAttributes;
+    return [];
   }
 
   ngOnInit() {
     this.loadSyncStatus();
-    // Periodically poll for S3 webhook synchronizations that occur out-of-band in the background
-    // this.pollingInterval = setInterval(() => this.loadSyncStatus(), 10000);
+    
+    // Auto-select tab they actually have permissions to see
+    if (this.authService.hasRole('ROLE_HR')) {
+      this.activeSidebarTab.set('personnel');
+    } else if (this.authService.hasRole('ROLE_ECO')) {
+      this.activeSidebarTab.set('projects');
+    } else if (this.authService.hasRole('ROLE_FINANCE')) {
+      this.activeSidebarTab.set('procurement');
+    } else if (this.authService.hasRole('ROLE_IT')) {
+      this.activeSidebarTab.set('inventory');
+    }
   }
 
   ngOnDestroy() {
@@ -83,7 +118,7 @@ export class DataHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  onFileSelected(event: Event, type: 'personnel' | 'projects') {
+  onFileSelected(event: Event, type: 'personnel' | 'projects' | 'procurement' | 'inventory') {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
@@ -113,13 +148,20 @@ export class DataHubComponent implements OnInit, OnDestroy {
     this.isUploading.set(true);
     this.alert.set(null); // Clear previous alerts
 
-    const upload$ = type === 'personnel'
-      ? this.dataHubService.uploadPersonnel(file, mapping)
-      : this.dataHubService.uploadProjects(file, mapping);
+    let upload$: import('rxjs').Observable<DataHubResponse>;
+    if (type === 'personnel') upload$ = this.dataHubService.uploadPersonnel(file, mapping);
+    else if (type === 'projects') upload$ = this.dataHubService.uploadProjects(file, mapping);
+    else if (type === 'procurement') upload$ = this.dataHubService.uploadProcurement(file, mapping);
+    else upload$ = this.dataHubService.uploadInventory(file, mapping);
 
     upload$.subscribe({
       next: (response: DataHubResponse) => {
-        const msg = `${type === 'personnel' ? 'HR' : 'Project'} Data Uploaded: ${response.success_count} success, ${response.error_count} errors`;
+        let typeName = 'Data';
+        if (type === 'personnel') typeName = 'HR';
+        else if (type === 'projects') typeName = 'Project';
+        else if (type === 'procurement') typeName = 'Procurement';
+        else if (type === 'inventory') typeName = 'Inventory';
+        const msg = `${typeName} Data Uploaded: ${response.success_count} success, ${response.error_count} errors`;
         this.alert.set({
           message: msg,
           type: response.error_count > 0 ? 'info' : 'success',

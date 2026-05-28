@@ -29,6 +29,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/data-hub/data-hub.component').then(m => m.DataHubComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'asset-audit',
+    loadComponent: () => import('./features/asset-audit-dashboard/asset-audit-dashboard.component').then(m => m.AssetAuditDashboardComponent),
+    canActivate: [authGuard]
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'dashboard' }
 ];

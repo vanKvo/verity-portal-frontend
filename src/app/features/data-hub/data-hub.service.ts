@@ -32,6 +32,24 @@ export class DataHubService {
     return this.http.post<DataHubResponse>(`${this.baseUrl}/projects/upload`, formData);
   }
 
+  uploadProcurement(file: File, mapping: ColumnMapping | null = null): Observable<DataHubResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (mapping) {
+      formData.append('mapping', JSON.stringify(mapping));
+    }
+    return this.http.post<DataHubResponse>(`${this.baseUrl}/procurement/upload`, formData);
+  }
+
+  uploadInventory(file: File, mapping: ColumnMapping | null = null): Observable<DataHubResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (mapping) {
+      formData.append('mapping', JSON.stringify(mapping));
+    }
+    return this.http.post<DataHubResponse>(`${this.baseUrl}/inventory/upload`, formData);
+  }
+
   parseHeaders(file: File): Observable<{ headers: string[] }> {
     const formData = new FormData();
     formData.append('file', file);

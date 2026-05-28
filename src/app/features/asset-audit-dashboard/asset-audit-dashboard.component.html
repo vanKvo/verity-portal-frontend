@@ -1,0 +1,80 @@
+<div class="audit-dashboard-container">
+  <header class="header">
+    <div class="header-top">
+      <h1>Asset & PO Reconciliation Audit</h1>
+      <p class="subtitle">Review detected financial and physical anomalies for Ghost Assets and Wasted Spend.</p>
+    </div>
+  </header>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Open Anomalies</mat-card-title>
+      <mat-card-subtitle>Cross-referenced from Procurement and IT Inventory Master Data</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <table mat-table [dataSource]="violations()" class="mat-elevation-z1">
+
+        <!-- Type Column -->
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef> Violation Type </th>
+          <td mat-cell *matCellDef="let element">
+            <mat-chip [color]="getViolationChipColor(element.violation_type)" selected>
+              {{element.violation_type | titlecase | uppercase}}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Asset Tag Column -->
+        <ng-container matColumnDef="asset_tag">
+          <th mat-header-cell *matHeaderCellDef> Asset Tag </th>
+          <td mat-cell *matCellDef="let element"> {{element.asset_tag || 'N/A'}} </td>
+        </ng-container>
+
+        <!-- PO Number Column -->
+        <ng-container matColumnDef="po_number">
+          <th mat-header-cell *matHeaderCellDef> PO Number </th>
+          <td mat-cell *matCellDef="let element"> {{element.po_number || 'N/A'}} </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef> Status </th>
+          <td mat-cell *matCellDef="let element">
+            <mat-chip [color]="getStatusChipColor(element.status)" selected>
+              {{element.status}}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Created At Column -->
+        <ng-container matColumnDef="created_at">
+          <th mat-header-cell *matHeaderCellDef> Detected At </th>
+          <td mat-cell *matCellDef="let element"> {{element.created_at | date:'medium'}} </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Actions </th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-button color="primary" 
+                    *ngIf="element.status === 'OPEN' && authService.hasRole('ROLE_FINANCE')"
+                    (click)="resolveViolation(element)">
+              RESOLVE
+            </button>
+            <span *ngIf="element.status === 'RESOLVED'" class="resolution-reason" title="{{element.resolution_reason}}">
+              Resolved
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <div *ngIf="violations().length === 0" class="no-data-message">
+        <p>No anomalies detected. All assets and POs are reconciled!</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

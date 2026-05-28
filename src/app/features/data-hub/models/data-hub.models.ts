@@ -16,4 +16,6 @@ export interface DataHubResponse {
 export interface SyncStatus {
   personnel_last_sync: string | null;
   projects_last_sync: string | null;
+  procurement_last_sync: string | null;
+  inventory_last_sync: string | null;
 }

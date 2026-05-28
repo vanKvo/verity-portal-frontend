@@ -9,94 +9,275 @@
     </div>
   </header>
 
-  <mat-card>
-    <mat-card-header>
-      <mat-card-subtitle>System of Record Ingestion</mat-card-subtitle>
-    </mat-card-header>
+  <mat-card class="data-hub-card">
+    <mat-card-content class="split-layout">
 
-    <mat-card-content>
-      <!-- Persistent Alert Message -->
-      <div *ngIf="alert()" class="alert-box" [ngClass]="alert()?.type">
-        <div class="alert-main">
-          <span class="message">{{ alert()?.message }}</span>
-          <button mat-icon-button (click)="closeAlert()">
-            <mat-icon>close</mat-icon>
-          </button>
+      <!-- Left Column: Sidebar Ingestion Catalog -->
+      <div class="sidebar"
+        *ngIf="headers().length === 0 && !isUploading() && (authService.hasRole('ROLE_HR') || authService.hasRole('ROLE_ECO') || authService.hasRole('ROLE_FINANCE') || authService.hasRole('ROLE_IT'))">
+        <div class="sidebar-header">
+          <mat-icon>hub</mat-icon>
+          <span>DATA SOURCES</span>
         </div>
 
-        <!-- Detailed Errors -->
-        <div *ngIf="alert()?.errors?.length" class="errors-container">
-          <p class="error-title">Issue Log (Top {{ alert()?.errors?.length }}):</p>
-          <ul class="error-list">
-            <li *ngFor="let err of alert()?.errors">
-              <strong>Row {{ err.row }}:</strong> {{ err.error }}
-            </li>
-          </ul>
+        <div class="group-title">IDENTITY & RAG</div>
+        <div class="sidebar-item" *ngIf="authService.hasRole('ROLE_HR')"
+          [class.active]="activeSidebarTab() === 'personnel'" (click)="activeSidebarTab.set('personnel')">
+          <mat-icon>people</mat-icon>
+          <span>Personnel & HR</span>
+        </div>
+
+        <div class="group-title">GOVERNANCE</div>
+        <div class="sidebar-item" *ngIf="authService.hasRole('ROLE_ECO')"
+          [class.active]="activeSidebarTab() === 'projects'" (click)="activeSidebarTab.set('projects')">
+          <mat-icon>gavel</mat-icon>
+          <span>Project Governance</span>
+        </div>
+
+        <div class="group-title">FINANCE & ASSETS</div>
+        <div class="sidebar-item" *ngIf="authService.hasRole('ROLE_FINANCE')"
+          [class.active]="activeSidebarTab() === 'procurement'" (click)="activeSidebarTab.set('procurement')">
+          <mat-icon>receipt_long</mat-icon>
+          <span>Procurement Records</span>
+        </div>
+        <div class="sidebar-item" *ngIf="authService.hasRole('ROLE_IT')"
+          [class.active]="activeSidebarTab() === 'inventory'" (click)="activeSidebarTab.set('inventory')">
+          <mat-icon>devices</mat-icon>
+          <span>IT Inventory</span>
         </div>
       </div>
 
-      <div *ngIf="isUploading()" class="loading-overlay">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Processing master data...</p>
+      <!-- Right Column: Detail Content Pane -->
+      <div class="main-content-pane">
+
+        <!-- Persistent Ingestion Alerts -->
+        <div *ngIf="alert()" class="alert-box" [ngClass]="alert()?.type">
+          <div class="alert-main">
+            <span class="message">{{ alert()?.message }}</span>
+            <button mat-icon-button (click)="closeAlert()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <div *ngIf="alert()?.errors?.length" class="errors-container">
+            <p class="error-title">Issue Log (Top {{ alert()?.errors?.length }}):</p>
+            <ul class="error-list">
+              <li *ngFor="let err of alert()?.errors">
+                <strong>Row {{ err.row }}:</strong> {{ err.error }}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div *ngIf="isUploading()" class="loading-overlay">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Processing master data...</p>
+        </div>
+
+        <!-- Mapping UI -->
+        <app-share-mapper *ngIf="headers().length > 0 && !isUploading()" [headers]="headers()"
+          [targetAttributes]="currentAttributes" (mapped)="onMapped($event)" (cancelled)="reset()">
+        </app-share-mapper>
+
+        <!-- Main Stream Details View -->
+        <div class="stream-view" *ngIf="headers().length === 0 && !isUploading()">
+
+          <!-- Default fallback if no roles matching -->
+          <div
+            *ngIf="!authService.hasRole('ROLE_HR') && !authService.hasRole('ROLE_ECO') && !authService.hasRole('ROLE_FINANCE') && !authService.hasRole('ROLE_IT')"
+            class="no-permissions-box">
+            <mat-icon class="huge-icon">lock</mat-icon>
+            <h3>Access Restricted</h3>
+            <p>You do not have permissions to manage master data. Please contact your system administrator.</p>
+          </div>
+
+          <!-- Personnel Detail (HR role) -->
+          <div class="stream-content" *ngIf="activeSidebarTab() === 'personnel' && authService.hasRole('ROLE_HR')">
+            <div class="stream-header-info">
+              <div class="badge-row">
+                <span class="role-badge hr">ROLE_HR</span>
+                <span class="type-badge automatic">S3 AUTO-SYNC</span>
+              </div>
+              <h2>HR Master Records</h2>
+              <p class="stream-desc">Synchronizes authoritative personnel records, including citizenship, country
+                representation, and security clearance attributes. Used directly for cross-checking system access
+                violations and export compliance rosters.</p>
+            </div>
+
+            <div class="sync-status-card">
+              <div class="sync-item">
+                <span class="label">S3 Sync Location:</span>
+                <code class="path">s3://verity-portal-bucket/ingest/personnel/</code>
+              </div>
+              <div class="sync-item" *ngIf="syncStatus()?.personnel_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <div class="timestamp-badge">
+                  <mat-icon>update</mat-icon>
+                  <span>{{ syncStatus()?.personnel_last_sync | date:'medium' }}</span>
+                </div>
+              </div>
+              <div class="sync-item" *ngIf="!syncStatus()?.personnel_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <span class="status-warning">Never Synced</span>
+              </div>
+              <button mat-stroked-button (click)="loadSyncStatus()" class="btn-refresh">
+                <mat-icon>refresh</mat-icon> Refresh Sync Status
+              </button>
+            </div>
+
+            <div class="manual-upload-section">
+              <h4>Manual Backup Ingestion</h4>
+              <p class="section-desc">If the automated S3 pipeline is delayed, ingest an Excel/CSV roster manually.
+                Column mapping wizard will guide ingestion.</p>
+              <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden
+                accept=".csv,.xlsx,.xls">
+              <button mat-raised-button color="primary" (click)="hrInput.click()">
+                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+              </button>
+            </div>
+          </div>
+
+          <!-- Project Detail (ECO role) -->
+          <div class="stream-content" *ngIf="activeSidebarTab() === 'projects' && authService.hasRole('ROLE_ECO')">
+            <div class="stream-header-info">
+              <div class="badge-row">
+                <span class="role-badge eco">ROLE_ECO</span>
+                <span class="type-badge automatic">S3 AUTO-SYNC</span>
+              </div>
+              <h2>Project Master Governance</h2>
+              <p class="stream-desc">Maintains project sensitivity classifications (e.g. ITAR Restricted, EAR99,
+                proprietary) and project roster allocations. Crucial for verifying that foreign nationals do not receive
+                unauthorized access to sensitive codebases.</p>
+            </div>
+
+            <div class="sync-status-card">
+              <div class="sync-item">
+                <span class="label">S3 Sync Location:</span>
+                <code class="path">s3://verity-portal-bucket/ingest/projects/</code>
+              </div>
+              <div class="sync-item" *ngIf="syncStatus()?.projects_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <div class="timestamp-badge">
+                  <mat-icon>update</mat-icon>
+                  <span>{{ syncStatus()?.projects_last_sync | date:'medium' }}</span>
+                </div>
+              </div>
+              <div class="sync-item" *ngIf="!syncStatus()?.projects_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <span class="status-warning">Never Synced</span>
+              </div>
+              <button mat-stroked-button (click)="loadSyncStatus()" class="btn-refresh">
+                <mat-icon>refresh</mat-icon> Refresh Sync Status
+              </button>
+            </div>
+
+            <div class="manual-upload-section">
+              <h4>Manual Backup Ingestion</h4>
+              <p class="section-desc">Upload a CSV containing active projects and export control restrictions manually.
+              </p>
+              <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden
+                accept=".csv,.xlsx,.xls">
+              <button mat-raised-button color="accent" (click)="projInput.click()">
+                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+              </button>
+            </div>
+          </div>
+
+          <!-- Procurement Detail (Finance role) -->
+          <div class="stream-content"
+            *ngIf="activeSidebarTab() === 'procurement' && authService.hasRole('ROLE_FINANCE')">
+            <div class="stream-header-info">
+              <div class="badge-row">
+                <span class="role-badge finance">ROLE_FINANCE</span>
+                <span class="type-badge automatic">S3 AUTO-SYNC</span>
+              </div>
+              <h2>Financial Procurement Data</h2>
+              <p class="stream-desc">Captures financial Purchase Orders (POs), active software licenses, SaaS
+                subscriptions, and hardware purchase logs. Wired directly to the Asset Audit Reconciliation engine to
+                detect Wasted Spend.</p>
+            </div>
+
+            <div class="sync-status-card">
+              <div class="sync-item">
+                <span class="label">S3 Sync Location:</span>
+                <code class="path">s3://verity-portal-bucket/ingest/procurement/</code>
+              </div>
+              <div class="sync-item" *ngIf="syncStatus()?.procurement_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <div class="timestamp-badge">
+                  <mat-icon>update</mat-icon>
+                  <span>{{ syncStatus()?.procurement_last_sync | date:'medium' }}</span>
+                </div>
+              </div>
+              <div class="sync-item" *ngIf="!syncStatus()?.procurement_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <span class="status-warning">Never Synced</span>
+              </div>
+              <button mat-stroked-button (click)="loadSyncStatus()" class="btn-refresh">
+                <mat-icon>refresh</mat-icon> Refresh Sync Status
+              </button>
+            </div>
+
+            <div class="manual-upload-section">
+              <h4>Manual Backup Ingestion</h4>
+              <p class="section-desc">Reconcile immediate financial invoices or PO sheets. Ingest your PO CSV logs
+                below.</p>
+              <input type="file" #procInput (change)="onFileSelected($event, 'procurement')" hidden
+                accept=".csv,.xlsx,.xls">
+              <button mat-raised-button color="primary" (click)="procInput.click()">
+                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+              </button>
+            </div>
+          </div>
+
+          <!-- Inventory Detail (IT role) -->
+          <div class="stream-content" *ngIf="activeSidebarTab() === 'inventory' && authService.hasRole('ROLE_IT')">
+            <div class="stream-header-info">
+              <div class="badge-row">
+                <span class="role-badge it">ROLE_IT</span>
+                <span class="type-badge automatic">S3 AUTO-SYNC</span>
+              </div>
+              <h2>IT Hardware Inventory</h2>
+              <p class="stream-desc">Stores records of physical equipment, hardware serial numbers, device enrollment
+                statuses, and employee hardware assignments. Reconciled against PO sheets to expose unmonitored "Ghost
+                Assets."</p>
+            </div>
+
+            <div class="sync-status-card">
+              <div class="sync-item">
+                <span class="label">S3 Sync Location:</span>
+                <code class="path">s3://verity-portal-bucket/ingest/inventory/</code>
+              </div>
+              <div class="sync-item" *ngIf="syncStatus()?.inventory_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <div class="timestamp-badge">
+                  <mat-icon>update</mat-icon>
+                  <span>{{ syncStatus()?.inventory_last_sync | date:'medium' }}</span>
+                </div>
+              </div>
+              <div class="sync-item" *ngIf="!syncStatus()?.inventory_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <span class="status-warning">Never Synced</span>
+              </div>
+              <button mat-stroked-button (click)="loadSyncStatus()" class="btn-refresh">
+                <mat-icon>refresh</mat-icon> Refresh Sync Status
+              </button>
+            </div>
+
+            <div class="manual-upload-section">
+              <h4>Manual Backup Ingestion</h4>
+              <p class="section-desc">Direct hardware drop-off verification. Load your inventory spreadsheet or hardware
+                registry logs below.</p>
+              <input type="file" #invInput (change)="onFileSelected($event, 'inventory')" hidden
+                accept=".csv,.xlsx,.xls">
+              <button mat-raised-button color="accent" (click)="invInput.click()">
+                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <!-- Mapping UI -->
-      <app-share-mapper *ngIf="headers().length > 0 && !isUploading()" [headers]="headers()"
-        [targetAttributes]="currentAttributes" (mapped)="onMapped($event)" (cancelled)="reset()">
-      </app-share-mapper>
-
-      <mat-tab-group *ngIf="headers().length === 0 && !isUploading()">
-        <!-- HR Master Data Tab (ROLE_HR) -->
-        <mat-tab label="Personnel & HR" *ngIf="authService.hasRole('ROLE_HR')">
-          <div class="tab-content">
-            <h3>HR Master Records</h3>
-            <p>Upload citizenship status and termination dates for personnel.</p>
-
-            <div class="last-sync-badge" *ngIf="syncStatus()?.personnel_last_sync" style="display: inline-flex; align-items: center; gap: 8px;">
-              <mat-icon>history</mat-icon>
-              <span>Last Sync: {{ syncStatus()?.personnel_last_sync | date:'medium' }}</span>
-              <button mat-icon-button (click)="loadSyncStatus()" style="width: 24px; height: 24px; line-height: 24px; display: inline-flex; align-items: center; justify-content: center;">
-                <mat-icon style="font-size: 16px; width: 16px; height: 16px; line-height: 16px; margin: 0;">refresh</mat-icon>
-              </button>
-            </div>
-
-            <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden
-              accept=".csv,.xlsx,.xls,.numbers">
-            <button mat-raised-button color="primary" (click)="hrInput.click()">
-              <mat-icon>upload</mat-icon> Upload
-            </button>
-          </div>
-        </mat-tab>
-
-        <!-- Project Sensitivity Tab (ROLE_ECO) -->
-        <mat-tab label="Project Governance" *ngIf="authService.hasRole('ROLE_ECO')">
-          <div class="tab-content">
-            <h3>Project Master Data</h3>
-            <p>Define and update project sensitivity classifications (ITAR, EAR99).</p>
-
-            <div class="last-sync-badge" *ngIf="syncStatus()?.projects_last_sync" style="display: inline-flex; align-items: center; gap: 8px;">
-              <mat-icon>history</mat-icon>
-              <span>Last Sync: {{ syncStatus()?.projects_last_sync | date:'medium' }}</span>
-              <button mat-icon-button (click)="loadSyncStatus()" style="width: 24px; height: 24px; line-height: 24px; display: inline-flex; align-items: center; justify-content: center;">
-                <mat-icon style="font-size: 16px; width: 16px; height: 16px; line-height: 16px; margin: 0;">refresh</mat-icon>
-              </button>
-            </div>
-
-            <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden
-              accept=".csv,.xlsx,.xls,.numbers">
-            <button mat-raised-button color="accent" (click)="projInput.click()">
-              <mat-icon>upload</mat-icon> Upload
-            </button>
-          </div>
-        </mat-tab>
-
-        <!-- Informational Tab for others -->
-        <mat-tab label="Overview" *ngIf="!authService.hasRole('ROLE_HR') && !authService.hasRole('ROLE_ECO')">
-          <div class="tab-content">
-            <p>You do not have permissions to manage master data. Please contact an administrator.</p>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
     </mat-card-content>
   </mat-card>
 </div>

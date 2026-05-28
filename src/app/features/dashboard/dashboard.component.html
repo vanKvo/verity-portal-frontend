@@ -40,7 +40,7 @@
 
     <!-- Data Hub -->
     <mat-card class="module-card" routerLink="/data-hub"
-      *ngIf="authService.hasRole('ROLE_HR') || authService.hasRole('ROLE_ECO')">
+      *ngIf="authService.hasRole('ROLE_HR') || authService.hasRole('ROLE_ECO') || authService.hasRole('ROLE_FINANCE') || authService.hasRole('ROLE_IT')">
       <mat-card-header>
         <mat-icon mat-card-avatar color="warn">database</mat-icon>
         <mat-card-title>Data Hub</mat-card-title>
@@ -51,6 +51,22 @@
       </mat-card-content>
       <mat-card-actions>
         <button mat-button color="warn">OPEN</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Asset Audit (Phase 7) -->
+    <mat-card class="module-card" routerLink="/asset-audit"
+      *ngIf="authService.hasRole('ROLE_FINANCE') || authService.hasRole('ROLE_IT')">
+      <mat-card-header>
+        <mat-icon mat-card-avatar color="primary">inventory_2</mat-icon>
+        <mat-card-title>Asset & PO Audit</mat-card-title>
+        <mat-card-subtitle>Financial & Inventory Reconciliation</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Detect Ghost Assets and Wasted Spend by cross-referencing Procurement and IT Inventory records.</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button color="primary">OPEN</button>
       </mat-card-actions>
     </mat-card>
   </div>

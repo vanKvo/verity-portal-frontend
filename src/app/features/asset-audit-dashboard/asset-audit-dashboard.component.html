@@ -2,79 +2,298 @@
   <header class="header">
     <div class="header-top">
       <h1>Asset & PO Reconciliation Audit</h1>
-      <p class="subtitle">Review detected financial and physical anomalies for Ghost Assets and Wasted Spend.</p>
+      <button mat-stroked-button color="primary" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        BACK TO DASHBOARD
+      </button>
     </div>
+    <p class="subtitle">
+      Review detected financial and physical anomalies for
+      <span class="hover-definition"
+        matTooltip="Active IT inventory devices physically or logically present without a corresponding Purchase Order/financial record.">Ghost
+        Assets</span>,
+      <span class="hover-definition"
+        matTooltip="Financial resources spent paying active maintenance or lease costs on retired or lost hardware assets.">Wasted
+        Spend</span>, and
+      <span class="hover-definition"
+        matTooltip="Hard assets/devices still marked as active or in-use that are assigned to employees who have separated/terminated from the company.">Unrecovered
+        Assets</span>.
+    </p>
   </header>
 
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>Open Anomalies</mat-card-title>
-      <mat-card-subtitle>Cross-referenced from Procurement and IT Inventory Master Data</mat-card-subtitle>
-    </mat-card-header>
+  <mat-tab-group class="audit-tabs mat-elevation-z2">
+    <!-- Open Violations Tab -->
+    <mat-tab>
+      <ng-template matTabLabel>
+        <mat-icon class="tab-icon">warning_amber</mat-icon>
+        <span class="tab-label">Violations ({{ openViolations().length }})</span>
+      </ng-template>
 
-    <mat-card-content>
-      <table mat-table [dataSource]="violations()" class="mat-elevation-z1">
+      <mat-card class="tab-card">
+        <mat-card-header>
+          <mat-card-title>Pending Violations</mat-card-title>
+          <mat-card-subtitle>Active anomalies requiring review or physical recovery</mat-card-subtitle>
+        </mat-card-header>
 
-        <!-- Type Column -->
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef> Violation Type </th>
-          <td mat-cell *matCellDef="let element">
-            <mat-chip [color]="getViolationChipColor(element.violation_type)" selected>
-              {{element.violation_type | titlecase | uppercase}}
-            </mat-chip>
-          </td>
-        </ng-container>
+        <mat-card-content>
+          <table mat-table [dataSource]="openViolations()" class="mat-elevation-z1" *ngIf="openViolations().length > 0">
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef> Violation Type </th>
+              <td mat-cell *matCellDef="let element">
+                <mat-chip [color]="getViolationChipColor(element.violation_type)" selected class="premium-chip">
+                  {{element.violation_type | titlecase | uppercase}}
+                </mat-chip>
+              </td>
+            </ng-container>
 
-        <!-- Asset Tag Column -->
-        <ng-container matColumnDef="asset_tag">
-          <th mat-header-cell *matHeaderCellDef> Asset Tag </th>
-          <td mat-cell *matCellDef="let element"> {{element.asset_tag || 'N/A'}} </td>
-        </ng-container>
+            <!-- Asset Tag Column -->
+            <ng-container matColumnDef="asset_tag">
+              <th mat-header-cell *matHeaderCellDef> Asset Tag </th>
+              <td mat-cell *matCellDef="let element"> {{element.asset_tag || 'N/A'}} </td>
+            </ng-container>
 
-        <!-- PO Number Column -->
-        <ng-container matColumnDef="po_number">
-          <th mat-header-cell *matHeaderCellDef> PO Number </th>
-          <td mat-cell *matCellDef="let element"> {{element.po_number || 'N/A'}} </td>
-        </ng-container>
+            <!-- PO Number Column -->
+            <ng-container matColumnDef="po_number">
+              <th mat-header-cell *matHeaderCellDef> PO Number </th>
+              <td mat-cell *matCellDef="let element"> {{element.po_number || 'N/A'}} </td>
+            </ng-container>
 
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef> Status </th>
-          <td mat-cell *matCellDef="let element">
-            <mat-chip [color]="getStatusChipColor(element.status)" selected>
-              {{element.status}}
-            </mat-chip>
-          </td>
-        </ng-container>
+            <!-- Custody Column -->
+            <ng-container matColumnDef="custody">
+              <th mat-header-cell *matHeaderCellDef> Custody (Employee ID)</th>
+              <td mat-cell *matCellDef="let element">
+                <div class="custody-container">
+                  <span class="employee-id">{{element.assigned_employee_id || 'Unassigned'}}</span>
+                  <span *ngIf="element.violation_type === 'UNRECOVERED_ASSET'"
+                    class="terminated-badge">Terminated</span>
+                </div>
+              </td>
+            </ng-container>
 
-        <!-- Created At Column -->
-        <ng-container matColumnDef="created_at">
-          <th mat-header-cell *matHeaderCellDef> Detected At </th>
-          <td mat-cell *matCellDef="let element"> {{element.created_at | date:'medium'}} </td>
-        </ng-container>
+            <!-- Status Reconciliation Column -->
+            <ng-container matColumnDef="status_reconciliation">
+              <th mat-header-cell *matHeaderCellDef> Status Reconciliation </th>
+              <td mat-cell *matCellDef="let element">
+                <div class="status-reconcile-box">
+                  <div class="status-row">
+                    <span class="status-label">IT Inventory:</span>
+                    <span class="status-val inventory-val" [attr.data-status]="element.inventory_status">
+                      {{element.inventory_status || 'N/A'}}
+                    </span>
+                  </div>
+                  <div class="status-row">
+                    <span class="status-label">Procurement:</span>
+                    <span class="status-val procurement-val" [attr.data-status]="element.procurement_status">
+                      {{element.procurement_status || 'N/A'}}
+                    </span>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
 
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef> Actions </th>
-          <td mat-cell *matCellDef="let element">
-            <button mat-button color="primary" 
-                    *ngIf="element.status === 'OPEN' && authService.hasRole('ROLE_FINANCE')"
-                    (click)="resolveViolation(element)">
-              RESOLVE
-            </button>
-            <span *ngIf="element.status === 'RESOLVED'" class="resolution-reason" title="{{element.resolution_reason}}">
-              Resolved
-            </span>
-          </td>
-        </ng-container>
+            <!-- Location Column -->
+            <ng-container matColumnDef="location">
+              <th mat-header-cell *matHeaderCellDef> Location (Site/Room) </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="location-text" *ngIf="element.physical_location_site || element.physical_location_room">
+                  {{element.physical_location_site || 'N/A'}} - Room {{element.physical_location_room || 'N/A'}}
+                </span>
+                <span class="location-none" *ngIf="!element.physical_location_site && !element.physical_location_room">
+                  N/A
+                </span>
+              </td>
+            </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
+            <!-- Directive Column -->
+            <ng-container matColumnDef="directive">
+              <th mat-header-cell *matHeaderCellDef> Recommended Action </th>
+              <td mat-cell *matCellDef="let element">
+                <div class="directive-chip" [attr.data-type]="element.violation_type">
+                  <span class="directive-text">{{getActionDirective(element)}}</span>
+                </div>
+              </td>
+            </ng-container>
 
-      <div *ngIf="violations().length === 0" class="no-data-message">
-        <p>No anomalies detected. All assets and POs are reconciled!</p>
+            <!-- Created At Column -->
+            <ng-container matColumnDef="created_at">
+              <th mat-header-cell *matHeaderCellDef> Detected At </th>
+              <td mat-cell *matCellDef="let element"> {{element.created_at | date:'medium'}} </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef> Actions </th>
+              <td mat-cell *matCellDef="let element">
+                <button mat-flat-button color="primary" *ngIf="authService.hasRole('ROLE_FINANCE')"
+                  (click)="resolveViolation(element)">
+                  RESOLVE
+                </button>
+                <span *ngIf="!authService.hasRole('ROLE_FINANCE')" class="role-warning">
+                  Finance Role Required
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+
+          <div *ngIf="openViolations().length === 0" class="no-data-message">
+            <mat-icon class="large-icon">check_circle_outline</mat-icon>
+            <p>No open anomalies detected. All assets and POs are perfectly reconciled!</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <!-- Resolved Violations Tab -->
+    <mat-tab>
+      <ng-template matTabLabel>
+        <mat-icon class="tab-icon">task_alt</mat-icon>
+        <span class="tab-label">Resolved ({{ resolvedViolations().length }})</span>
+      </ng-template>
+
+      <mat-card class="tab-card">
+        <mat-card-header>
+          <mat-card-title>Historical Resolutions</mat-card-title>
+          <mat-card-subtitle>Anomalies reviewed and resolved by the Finance team</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <table mat-table [dataSource]="resolvedViolations()" class="mat-elevation-z1"
+            *ngIf="resolvedViolations().length > 0">
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef> Violation Type </th>
+              <td mat-cell *matCellDef="let element">
+                <mat-chip [color]="getViolationChipColor(element.violation_type)" selected class="premium-chip">
+                  {{element.violation_type | titlecase | uppercase}}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Asset Tag Column -->
+            <ng-container matColumnDef="asset_tag">
+              <th mat-header-cell *matHeaderCellDef> Asset Tag </th>
+              <td mat-cell *matCellDef="let element"> {{element.asset_tag || 'N/A'}} </td>
+            </ng-container>
+
+            <!-- PO Number Column -->
+            <ng-container matColumnDef="po_number">
+              <th mat-header-cell *matHeaderCellDef> PO Number </th>
+              <td mat-cell *matCellDef="let element"> {{element.po_number || 'N/A'}} </td>
+            </ng-container>
+
+            <!-- Custody Column -->
+            <ng-container matColumnDef="custody">
+              <th mat-header-cell *matHeaderCellDef> Custody </th>
+              <td mat-cell *matCellDef="let element">
+                <div class="custody-container">
+                  <span class="employee-id">{{element.assigned_employee_id || 'Unassigned'}}</span>
+                  <span *ngIf="element.violation_type === 'UNRECOVERED_ASSET'"
+                    class="terminated-badge">Terminated</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Status Reconciliation Column -->
+            <ng-container matColumnDef="status_reconciliation">
+              <th mat-header-cell *matHeaderCellDef> Status Reconciliation </th>
+              <td mat-cell *matCellDef="let element">
+                <div class="status-reconcile-box">
+                  <div class="status-row">
+                    <span class="status-label">IT Inventory:</span>
+                    <span class="status-val inventory-val" [attr.data-status]="element.inventory_status">
+                      {{element.inventory_status || 'N/A'}}
+                    </span>
+                  </div>
+                  <div class="status-row">
+                    <span class="status-label">Procurement:</span>
+                    <span class="status-val procurement-val" [attr.data-status]="element.procurement_status">
+                      {{element.procurement_status || 'N/A'}}
+                    </span>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Location Column -->
+            <ng-container matColumnDef="location">
+              <th mat-header-cell *matHeaderCellDef> Location (Site/Room) </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="location-text" *ngIf="element.physical_location_site || element.physical_location_room">
+                  {{element.physical_location_site || 'N/A'}} - Room {{element.physical_location_room || 'N/A'}}
+                </span>
+                <span class="location-none" *ngIf="!element.physical_location_site && !element.physical_location_room">
+                  N/A
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Created At Column -->
+            <ng-container matColumnDef="created_at">
+              <th mat-header-cell *matHeaderCellDef> Detected At </th>
+              <td mat-cell *matCellDef="let element"> {{element.created_at | date:'medium'}} </td>
+            </ng-container>
+
+            <!-- Resolution Reason Column -->
+            <ng-container matColumnDef="resolution_reason">
+              <th mat-header-cell *matHeaderCellDef> Resolution Reason </th>
+              <td mat-cell *matCellDef="let element" class="resolution-cell">
+                <div class="reason-bubble" title="{{element.resolution_reason}}">
+                  {{element.resolution_reason || 'No reason provided.'}}
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="resolvedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: resolvedColumns;"></tr>
+          </table>
+
+          <div *ngIf="resolvedViolations().length === 0" class="no-data-message">
+            <mat-icon class="large-icon">history</mat-icon>
+            <p>No historical resolution logs found.</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Resolution Overlay Modal -->
+  <div class="dialog-backdrop" *ngIf="resolvingViolation() as violation">
+    <mat-card class="dialog-card">
+      <div class="dialog-header">
+        <mat-icon color="primary">gavel</mat-icon>
+        <h2>Resolve Asset Compliance Anomaly</h2>
       </div>
-    </mat-card-content>
-  </mat-card>
+
+      <div class="dialog-body">
+        <div class="violation-summary">
+          <p><strong>Asset Tag:</strong> {{violation.asset_tag || 'N/A'}}</p>
+          <p><strong>PO Number:</strong> {{violation.po_number || 'N/A'}}</p>
+          <p><strong>Violation Type:</strong> {{violation.violation_type | titlecase | uppercase}}</p>
+        </div>
+
+        <p class="dialog-instruction">
+          Please enter the resolution justification (e.g., PO reference number, physical location audit confirmation, or
+          IT inventory deployment reference).
+          <strong>This reason is required to finalize manual resolution.</strong>
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Resolution Justification / Audit Reference</mat-label>
+          <textarea matInput rows="3" [(ngModel)]="resolutionReason"
+            placeholder="Enter resolution justification..."></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-actions">
+        <button mat-button (click)="closeResolveDialog()">CANCEL</button>
+        <button mat-raised-button color="primary" [disabled]="!resolutionReason.trim()" (click)="submitResolution()">
+          CONFIRM RESOLUTION
+        </button>
+      </div>
+    </mat-card>
+  </div>
 </div>

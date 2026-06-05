@@ -129,9 +129,9 @@
               <p class="section-desc">If the automated S3 pipeline is delayed, ingest an Excel/CSV roster manually.
                 Column mapping wizard will guide ingestion.</p>
               <input type="file" #hrInput (change)="onFileSelected($event, 'personnel')" hidden
-                accept=".csv,.xlsx,.xls">
+                accept=".csv,.xlsx,.xls,.numbers">
               <button mat-raised-button color="primary" (click)="hrInput.click()">
-                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+                <mat-icon>cloud_upload</mat-icon> Upload File
               </button>
             </div>
           </div>
@@ -175,9 +175,9 @@
               <p class="section-desc">Upload a CSV containing active projects and export control restrictions manually.
               </p>
               <input type="file" #projInput (change)="onFileSelected($event, 'projects')" hidden
-                accept=".csv,.xlsx,.xls">
+                accept=".csv,.xlsx,.xls,.numbers">
               <button mat-raised-button color="accent" (click)="projInput.click()">
-                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+                <mat-icon>cloud_upload</mat-icon> Upload File
               </button>
             </div>
           </div>
@@ -222,9 +222,9 @@
               <p class="section-desc">Reconcile immediate financial invoices or PO sheets. Ingest your PO CSV logs
                 below.</p>
               <input type="file" #procInput (change)="onFileSelected($event, 'procurement')" hidden
-                accept=".csv,.xlsx,.xls">
+                accept=".csv,.xlsx,.xls,.numbers">
               <button mat-raised-button color="primary" (click)="procInput.click()">
-                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+                <mat-icon>cloud_upload</mat-icon> Upload File
               </button>
             </div>
           </div>
@@ -268,9 +268,9 @@
               <p class="section-desc">Direct hardware drop-off verification. Load your inventory spreadsheet or hardware
                 registry logs below.</p>
               <input type="file" #invInput (change)="onFileSelected($event, 'inventory')" hidden
-                accept=".csv,.xlsx,.xls">
+                accept=".csv,.xlsx,.xls,.numbers">
               <button mat-raised-button color="accent" (click)="invInput.click()">
-                <mat-icon>cloud_upload</mat-icon> Choose file & map columns
+                <mat-icon>cloud_upload</mat-icon> Upload File
               </button>
             </div>
           </div>

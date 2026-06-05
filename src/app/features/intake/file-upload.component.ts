@@ -20,7 +20,7 @@ export class FileUploadComponent {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   label = input<string>('Drag and drop file here or click to browse');
-  allowedExtensions = input<string[]>(['.csv', '.xlsx', '.xls']);
+  allowedExtensions = input<string[]>(['.csv', '.xlsx', '.xls', '.numbers']);
 
   onUploadSuccess = output<UploadResponse>();
   onUploadError = output<string>();

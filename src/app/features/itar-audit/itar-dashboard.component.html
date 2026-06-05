@@ -140,7 +140,11 @@
 
   <mat-card class="violation-card">
     <mat-tab-group>
-      <mat-tab label="Active Violations">
+      <mat-tab>
+        <ng-template matTabLabel>
+          <mat-icon class="tab-icon">warning_amber</mat-icon>
+          <span class="tab-label">Violations</span>
+        </ng-template>
         <div class="tab-content" style="padding-top: 1rem;">
           <table mat-table [dataSource]="activeViolations()" class="mat-elevation-z0">
             <ng-container matColumnDef="employee_id">
@@ -190,7 +194,7 @@
               <td mat-cell *matCellDef="let element">
                 <button mat-flat-button color="primary" (click)="openResolveDialog(element)"
                   *ngIf="authService.hasRole('ROLE_ECO')">
-                  <mat-icon>check</mat-icon> RESOLVE
+                  RESOLVE
                 </button>
               </td>
             </ng-container>
@@ -207,7 +211,11 @@
         </div>
       </mat-tab>
 
-      <mat-tab label="Resolved Violations">
+      <mat-tab>
+        <ng-template matTabLabel>
+          <mat-icon class="tab-icon">task_alt</mat-icon>
+          <span class="tab-label">Resolved</span>
+        </ng-template>
         <div class="tab-content" style="padding-top: 1rem;">
           <table mat-table [dataSource]="resolvedViolations()" class="mat-elevation-z0">
             <ng-container matColumnDef="employee_id">

@@ -79,6 +79,8 @@ export class DataHubComponent implements OnInit, OnDestroy {
     { key: 'serial_number', label: 'Serial Number', required: false },
     { key: 'assigned_employee_id', label: 'Assigned To', required: false },
     { key: 'status', label: 'Status', required: false },
+    { key: 'physical_location_site', label: 'Physical Site', required: false },
+    { key: 'physical_location_room', label: 'Physical Room', required: false },
   ];
 
   get currentAttributes(): TargetAttribute[] {

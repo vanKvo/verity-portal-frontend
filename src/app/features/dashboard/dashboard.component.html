@@ -1,76 +1,100 @@
 <div class="dashboard-container">
   <header>
     <h1>Dashboard</h1>
-    <p>Welcome, <strong>{{ authService.currentUser()?.email }}</strong>!</p>
-    <p>Roles: <span class="badge" *ngFor="let role of authService.currentUser()?.roles">{{ role }}</span></p>
+    <p class="welcome-text">Welcome back, <strong>{{ authService.currentUser()?.email }}</strong></p>
+    <div class="roles-container">
+      <span class="roles-label">Roles:</span>
+      <span class="badge" *ngFor="let role of authService.currentUser()?.roles">{{ role }}</span>
+    </div>
   </header>
 
-  <div class="module-grid">
-    <!-- Compliance Engine / Audit -->
-    <mat-card class="module-card" routerLink="/audit">
-      <mat-card-header>
-        <mat-icon mat-card-avatar color="primary">security</mat-icon>
-        <mat-card-title>Compliance Engine</mat-card-title>
-        <mat-card-subtitle>Leaver/Mover Access Audit</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Run automated reconciliation between HR and IT records. Identify unauthorized access and generate
-          auditor-ready reports.</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button color="primary">OPEN</button>
-      </mat-card-actions>
-    </mat-card>
+  <mat-tab-group class="dashboard-tabs mat-elevation-z1">
+    <!-- Operational Audits & Compliance -->
+    <mat-tab>
+      <ng-template matTabLabel>
+        <mat-icon class="tab-icon">security</mat-icon>
+        <span class="tab-label">Security & Compliance Audits</span>
+      </ng-template>
+      <div class="tab-content">
+        <div class="module-grid">
+          <!-- Compliance Engine / Audit -->
+          <mat-card class="module-card" routerLink="/audit">
+            <mat-card-header>
+              <mat-icon mat-card-avatar color="primary">security</mat-icon>
+              <mat-card-title>Compliance Engine</mat-card-title>
+              <mat-card-subtitle>Leaver/Mover Access Audit</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Run automated reconciliation between HR and IT records. Identify unauthorized access and generate
+                auditor-ready reports.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button color="primary">OPEN</button>
+            </mat-card-actions>
+          </mat-card>
 
-    <!-- ITAR & Export Control -->
-    <mat-card class="module-card" routerLink="/itar">
-      <mat-card-header>
-        <mat-icon mat-card-avatar color="accent">public</mat-icon>
-        <mat-card-title>ITAR & Export Control</mat-card-title>
-        <mat-card-subtitle>Citizenship & Project Sensitivity</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Manage project sensitivity levels and cross-reference personnel citizenship data to prevent export control
-          violations.</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button color="accent">OPEN</button>
-      </mat-card-actions>
-    </mat-card>
+          <!-- ITAR & Export Control -->
+          <mat-card class="module-card" routerLink="/itar">
+            <mat-card-header>
+              <mat-icon mat-card-avatar color="accent">public</mat-icon>
+              <mat-card-title>ITAR & Export Control</mat-card-title>
+              <mat-card-subtitle>Citizenship & Project Sensitivity</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Manage project sensitivity levels and cross-reference personnel citizenship data to prevent export control
+                violations.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button color="accent">OPEN</button>
+            </mat-card-actions>
+          </mat-card>
 
-    <!-- Data Hub -->
-    <mat-card class="module-card" routerLink="/data-hub"
-      *ngIf="authService.hasRole('ROLE_HR') || authService.hasRole('ROLE_ECO') || authService.hasRole('ROLE_FINANCE') || authService.hasRole('ROLE_IT')">
-      <mat-card-header>
-        <mat-icon mat-card-avatar color="warn">database</mat-icon>
-        <mat-card-title>Data Hub</mat-card-title>
-        <mat-card-subtitle>Master Data Ingestion</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Centralized ingestion for system-of-record master data including HR personnel and Project governance.</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button color="warn">OPEN</button>
-      </mat-card-actions>
-    </mat-card>
+          <!-- Asset Audit -->
+          <mat-card class="module-card" routerLink="/asset-audit"
+            *ngIf="authService.hasRole('ROLE_FINANCE') || authService.hasRole('ROLE_IT')">
+            <mat-card-header>
+              <mat-icon mat-card-avatar color="primary">inventory_2</mat-icon>
+              <mat-card-title>Asset & PO Audit</mat-card-title>
+              <mat-card-subtitle>Financial & Inventory Reconciliation</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Detect Ghost Assets, Wasted Spend and Unrecovered Assets by cross-referencing Procurement and IT Inventory
+                records.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button color="primary">OPEN</button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
 
-    <!-- Asset Audit (Phase 7) -->
-    <mat-card class="module-card" routerLink="/asset-audit"
-      *ngIf="authService.hasRole('ROLE_FINANCE') || authService.hasRole('ROLE_IT')">
-      <mat-card-header>
-        <mat-icon mat-card-avatar color="primary">inventory_2</mat-icon>
-        <mat-card-title>Asset & PO Audit</mat-card-title>
-        <mat-card-subtitle>Financial & Inventory Reconciliation</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Detect Ghost Assets, Wasted Spend and Unrecovered Assets by cross-referencing Procurement and IT Inventory
-          records.</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button color="primary">OPEN</button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
+    <!-- Data Administration -->
+    <mat-tab *ngIf="authService.hasRole('ROLE_HR') || authService.hasRole('ROLE_ECO') || authService.hasRole('ROLE_FINANCE') || authService.hasRole('ROLE_IT')">
+      <ng-template matTabLabel>
+        <mat-icon class="tab-icon">storage</mat-icon>
+        <span class="tab-label">Data Administration</span>
+      </ng-template>
+      <div class="tab-content">
+        <div class="module-grid">
+          <!-- Data Hub -->
+          <mat-card class="module-card" routerLink="/data-hub">
+            <mat-card-header>
+              <mat-icon mat-card-avatar color="warn">storage</mat-icon>
+              <mat-card-title>Data Hub</mat-card-title>
+              <mat-card-subtitle>Master Data Ingestion</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Centralized ingestion for system-of-record master data including HR personnel and Project governance.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button color="warn">OPEN</button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 
   <button mat-raised-button color="warn" class="logout-btn" (click)="authService.logout()">
     <mat-icon>logout</mat-icon>

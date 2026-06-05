@@ -6,11 +6,12 @@ import { AuthService } from '../../core/services/auth.service';
 
 import { MatCardModule } from '@angular/material/card';
 import { RouterModule } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatCardModule, RouterModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatCardModule, RouterModule, MatTabsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })

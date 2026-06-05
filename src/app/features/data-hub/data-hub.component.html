@@ -20,11 +20,16 @@
           <span>DATA SOURCES</span>
         </div>
 
-        <div class="group-title">IDENTITY & RAG</div>
+        <div class="group-title">IDENTITY & ACCESS</div>
         <div class="sidebar-item" *ngIf="authService.hasRole('ROLE_HR')"
           [class.active]="activeSidebarTab() === 'personnel'" (click)="activeSidebarTab.set('personnel')">
           <mat-icon>people</mat-icon>
           <span>Personnel & HR</span>
+        </div>
+        <div class="sidebar-item" *ngIf="authService.hasRole('ROLE_IT') || authService.hasRole('ROLE_ECO')"
+          [class.active]="activeSidebarTab() === 'it_activity'" (click)="activeSidebarTab.set('it_activity')">
+          <mat-icon>security</mat-icon>
+          <span>IT Activity Logs</span>
         </div>
 
         <div class="group-title">GOVERNANCE</div>
@@ -104,10 +109,6 @@
             </div>
 
             <div class="sync-status-card">
-              <div class="sync-item">
-                <span class="label">S3 Sync Location:</span>
-                <code class="path">s3://verity-portal-bucket/ingest/personnel/</code>
-              </div>
               <div class="sync-item" *ngIf="syncStatus()?.personnel_last_sync">
                 <span class="label">Last Ingestion:</span>
                 <div class="timestamp-badge">
@@ -150,10 +151,6 @@
             </div>
 
             <div class="sync-status-card">
-              <div class="sync-item">
-                <span class="label">S3 Sync Location:</span>
-                <code class="path">s3://verity-portal-bucket/ingest/projects/</code>
-              </div>
               <div class="sync-item" *ngIf="syncStatus()?.projects_last_sync">
                 <span class="label">Last Ingestion:</span>
                 <div class="timestamp-badge">
@@ -197,10 +194,6 @@
             </div>
 
             <div class="sync-status-card">
-              <div class="sync-item">
-                <span class="label">S3 Sync Location:</span>
-                <code class="path">s3://verity-portal-bucket/ingest/procurement/</code>
-              </div>
               <div class="sync-item" *ngIf="syncStatus()?.procurement_last_sync">
                 <span class="label">Last Ingestion:</span>
                 <div class="timestamp-badge">
@@ -243,10 +236,6 @@
             </div>
 
             <div class="sync-status-card">
-              <div class="sync-item">
-                <span class="label">S3 Sync Location:</span>
-                <code class="path">s3://verity-portal-bucket/ingest/inventory/</code>
-              </div>
               <div class="sync-item" *ngIf="syncStatus()?.inventory_last_sync">
                 <span class="label">Last Ingestion:</span>
                 <div class="timestamp-badge">
@@ -270,6 +259,45 @@
               <input type="file" #invInput (change)="onFileSelected($event, 'inventory')" hidden
                 accept=".csv,.xlsx,.xls,.numbers">
               <button mat-raised-button color="accent" (click)="invInput.click()">
+                <mat-icon>cloud_upload</mat-icon> Upload File
+              </button>
+            </div>
+          </div>
+
+          <!-- IT Activity Detail (IT / ECO role) -->
+          <div class="stream-content" *ngIf="activeSidebarTab() === 'it_activity' && (authService.hasRole('ROLE_IT') || authService.hasRole('ROLE_ECO'))">
+            <div class="stream-header-info">
+              <div class="badge-row">
+                <span class="role-badge it">ROLE_IT / ROLE_ECO</span>
+                <span class="type-badge automatic">S3 AUTO-SYNC</span>
+              </div>
+              <h2>IT Activity Logs</h2>
+              <p class="stream-desc">Ingests system login activities and Active Directory logs. These login events are automatically reconciled against HR termination records to detect compliance issues such as post-termination system access.</p>
+            </div>
+
+            <div class="sync-status-card">
+              <div class="sync-item" *ngIf="syncStatus()?.it_activity_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <div class="timestamp-badge">
+                  <mat-icon>update</mat-icon>
+                  <span>{{ syncStatus()?.it_activity_last_sync | date:'medium' }}</span>
+                </div>
+              </div>
+              <div class="sync-item" *ngIf="!syncStatus()?.it_activity_last_sync">
+                <span class="label">Last Ingestion:</span>
+                <span class="status-warning">Never Synced</span>
+              </div>
+              <button mat-stroked-button (click)="loadSyncStatus()" class="btn-refresh">
+                <mat-icon>refresh</mat-icon> Refresh Sync Status
+              </button>
+            </div>
+
+            <div class="manual-upload-section">
+              <h4>Manual Backup Ingestion</h4>
+              <p class="section-desc">If the automated AD sync is delayed, upload the login log CSV manually. Column mapping wizard will guide ingestion.</p>
+              <input type="file" #itActInput (change)="onFileSelected($event, 'it_activity')" hidden
+                accept=".csv,.xlsx,.xls,.numbers">
+              <button mat-raised-button color="primary" (click)="itActInput.click()">
                 <mat-icon>cloud_upload</mat-icon> Upload File
               </button>
             </div>

@@ -92,7 +92,7 @@ describe('FileUploadComponent', () => {
     uploadSubject.complete();
 
     expect(successSpy).toHaveBeenCalledWith({
-      jobId: mockResponse.job_id,
+      job_id: mockResponse.job_id,
       headers: mockResponse.headers,
       suggestions: mockResponse.suggestions
     });

@@ -296,4 +296,16 @@
       </div>
     </mat-card>
   </div>
+
+  <!-- Success Overlay Modal -->
+  <div class="dialog-backdrop" *ngIf="showSuccessDialog()">
+    <mat-card class="dialog-card success-card" style="text-align: center; max-width: 400px; padding: 2.5rem;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+        <mat-icon style="font-size: 4rem; width: 64px; height: 64px; color: #2e7d32; margin-bottom: 0.5rem;">check_circle</mat-icon>
+        <h2 style="margin: 0; color: #1a237e; font-weight: 700;">Resolution Confirmed</h2>
+        <p style="color: #666; font-size: 0.95rem; line-height: 1.4; margin: 0 0 1.5rem 0;">{{ successMessage }}</p>
+        <button mat-raised-button color="primary" style="min-width: 120px;" (click)="showSuccessDialog.set(false)">OK</button>
+      </div>
+    </mat-card>
+  </div>
 </div>

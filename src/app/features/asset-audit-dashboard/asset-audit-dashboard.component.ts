@@ -70,6 +70,8 @@ export class AssetAuditDashboardComponent implements OnInit {
 
   resolvingViolation = signal<AssetViolation | null>(null);
   resolutionReason = '';
+  showSuccessDialog = signal(false);
+  successMessage = '';
 
   ngOnInit() {
     this.loadViolations();
@@ -128,7 +130,8 @@ export class AssetAuditDashboardComponent implements OnInit {
 
     this.auditService.resolveViolation(violation.id, { resolution_reason: reason }).subscribe({
       next: () => {
-        alert("Violation resolved successfully!");
+        this.successMessage = `Asset Tag ${violation.asset_tag || 'N/A'} was successfully resolved.`;
+        this.showSuccessDialog.set(true);
         this.closeResolveDialog();
         this.loadViolations();
       },

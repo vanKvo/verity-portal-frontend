@@ -1,130 +1,125 @@
-import { Component, signal, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { FormsModule } from '@angular/forms';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatStepperModule, MatStepper } from '@angular/material/stepper';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { SharedMapperComponent, SchemaField } from '../intake/shared-mapper.component';
-import { FileUploadComponent } from '../intake/file-upload.component';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormsModule } from '@angular/forms';
 import { AuditService } from './services/audit.service';
-import { IntakeSuggestion, UploadResponse } from '../intake/models/intake.models';
+import { LeaverViolation } from './models/leaver-mover.models';
+import { AuthService } from '../../core/services/auth.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-audit-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    MatCardModule,
     MatTableModule,
     MatButtonModule,
-    MatCardModule,
-    MatInputModule,
-    MatFormFieldModule,
-    FormsModule,
-    MatProgressSpinnerModule,
-    MatStepperModule,
-    MatSnackBarModule,
     MatIconModule,
-    SharedMapperComponent,
-    FileUploadComponent,
+    MatChipsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatTabsModule,
+    MatTooltipModule,
+    FormsModule,
     RouterModule
   ],
   templateUrl: './audit-dashboard.component.html',
   styleUrls: ['./audit-dashboard.component.css']
 })
-export class AuditDashboardComponent {
+export class AuditDashboardComponent implements OnInit {
   private auditService = inject(AuditService);
-  private snackBar = inject(MatSnackBar);
+  public authService = inject(AuthService);
 
-  @ViewChild('stepper') stepper!: MatStepper;
-  @ViewChild('hrMapper') hrMapper?: SharedMapperComponent;
-  @ViewChild('itMapper') itMapper?: SharedMapperComponent;
+  violations = signal<LeaverViolation[]>([]);
+  openViolations = computed(() => this.violations().filter(v => v.status === 'OPEN'));
+  resolvedViolations = computed(() => this.violations().filter(v => v.status === 'RESOLVED'));
 
-  hrJobId = signal('');
-  hrHeaders = signal<string[]>([]);
-  hrSuggestions = signal<IntakeSuggestion[]>([]);
-
-  itJobId = signal('');
-  itHeaders = signal<string[]>([]);
-  itSuggestions = signal<IntakeSuggestion[]>([]);
-
-  isLoading = signal(false);
-  violations = signal<any[]>([]);
-
-  handleHrUpload(event: UploadResponse) {
-    this.hrJobId.set(event.job_id);
-    this.hrHeaders.set(event.headers);
-    this.hrSuggestions.set(event.suggestions);
-  }
-  
-  handleItUpload(event: UploadResponse) {
-    this.itJobId.set(event.job_id);
-    this.itHeaders.set(event.headers);
-    this.itSuggestions.set(event.suggestions);
-  }
-
-  onMappingConfirmed() {
-    this.stepper.next();
-  }
-
-  hrSchema: SchemaField[] = [
-    { field: 'employee_id', description: 'Unique Employee ID', required: true },
-    { field: 'hr_termination_date', description: 'Termination Date', required: true },
-    { field: 'full_name', description: 'Full Name', required: false }
+  displayedColumns: string[] = [
+    'employee_id',
+    'hr_termination_date',
+    'last_system_login',
+    'system_name',
+    'ip_address',
+    'status',
+    'created_at',
+    'actions'
   ];
 
-  itSchema: SchemaField[] = [
-    { field: 'employee_id', description: 'Unique Employee ID', required: true },
-    { field: 'last_system_login', description: 'Last Login Timestamp', required: true },
-    { field: 'system_name', description: 'Target System', required: false }
+  resolvedColumns: string[] = [
+    'employee_id',
+    'hr_termination_date',
+    'last_system_login',
+    'system_name',
+    'ip_address',
+    'status',
+    'created_at',
+    'resolved_by',
+    'resolved_at',
+    'resolution_reason'
   ];
 
-  displayedColumns: string[] = ['employee_id', 'risk_level', 'violation_type', 'details'];
+  resolvingViolation = signal<LeaverViolation | null>(null);
+  resolutionReason = '';
+  showSuccessDialog = signal(false);
+  successMessage = '';
 
-  runAudit() {
-    if (!this.hrJobId() || !this.itJobId()) return;
-
-    this.isLoading.set(true);
-    this.auditService.runAudit(this.hrJobId(), this.itJobId())
-      .subscribe({
-        next: (response) => {
-          this.violations.set(response.violations);
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          const message = err.error?.message || 'An unexpected error occurred during audit.';
-          this.snackBar.open(message, 'Close', {
-            duration: 5000,
-            panelClass: ['error-snackbar']
-          });
-          this.isLoading.set(false);
-        }
-      });
+  ngOnInit() {
+    this.loadViolations();
   }
 
-  exportCsv() {
-    this.auditService.exportCsv(this.violations())
-      .subscribe(blob => this.downloadFile(blob, 'audit_report.csv'));
+  loadViolations() {
+    this.auditService.getViolations().subscribe({
+      next: (data) => this.violations.set(data),
+      error: (err) => console.error('Failed to load violations', err)
+    });
   }
 
-  exportPdf() {
-    this.auditService.exportPdf(this.violations())
-      .subscribe(blob => this.downloadFile(blob, 'audit_report.pdf'));
+  getStatusChipColor(status: string): string {
+    return status === 'OPEN' ? 'warn' : 'primary';
   }
 
-  private downloadFile(blob: Blob, filename: string) {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.URL.revokeObjectURL(url);
+  resolveViolation(violation: LeaverViolation) {
+    this.resolvingViolation.set(violation);
+    this.resolutionReason = '';
+  }
+
+  closeResolveDialog() {
+    this.resolvingViolation.set(null);
+    this.resolutionReason = '';
+  }
+
+  submitResolution() {
+    const violation = this.resolvingViolation();
+    if (!violation) return;
+
+    const reason = this.resolutionReason.trim();
+    if (reason.length < 5) {
+      alert("Please provide a valid resolution reason (min 5 characters).");
+      return;
+    }
+
+    this.auditService.resolveViolation(violation.id, { resolution_reason: reason }).subscribe({
+      next: () => {
+        this.successMessage = `Violation for Employee ID ${violation.employee_id} was successfully resolved.`;
+        this.showSuccessDialog.set(true);
+        this.closeResolveDialog();
+        this.loadViolations();
+      },
+      error: (err) => {
+        const errMsg = err.error?.detail?.message || err.error?.detail || err.message;
+        alert("Failed to resolve violation: " + errMsg);
+      }
+    });
   }
 }

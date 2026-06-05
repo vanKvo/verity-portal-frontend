@@ -18,4 +18,5 @@ export interface SyncStatus {
   projects_last_sync: string | null;
   procurement_last_sync: string | null;
   inventory_last_sync: string | null;
+  it_activity_last_sync: string | null;
 }

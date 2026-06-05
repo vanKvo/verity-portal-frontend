@@ -13,6 +13,7 @@ export interface ComplianceViolation {
   sensitivity: string;
   status: 'OPEN' | 'RESOLVED';
   resolution_reason?: string;
+  resolved_by?: string;
   notes: string;
   created_at: string;
   resolved_at?: string;

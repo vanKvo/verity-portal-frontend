@@ -49,7 +49,7 @@ export class ItarDashboardComponent {
   violations = this.itarService.violations;
   alert = this.itarService.alert;
   activeColumns: string[] = ['employee_id', 'project_id', 'citizenship', 'sensitivity', 'status', 'notes', 'actions'];
-  resolvedColumns: string[] = ['employee_id', 'project_id', 'citizenship', 'sensitivity', 'status', 'resolution_reason', 'notes'];
+  resolvedColumns: string[] = ['employee_id', 'project_id', 'citizenship', 'sensitivity', 'status', 'resolved_by', 'resolved_at', 'resolution_reason', 'notes'];
 
   // Categorized computed violations lists
   activeViolations = computed(() => this.violations().filter(v => v.status === 'OPEN'));
@@ -58,6 +58,8 @@ export class ItarDashboardComponent {
   // Custom dialog/overlay resolution form state
   resolvingViolation = signal<any | null>(null);
   resolutionReason = '';
+  showSuccessDialog = signal(false);
+  successMessage = '';
 
   // Stepper & Mapping State
   currentFile = signal<File | null>(null);
@@ -179,7 +181,8 @@ export class ItarDashboardComponent {
 
     this.itarService.resolveViolation(violation.id, reason).subscribe({
       next: () => {
-        this.alert.set({ message: 'Violation marked as resolved.', type: 'success' });
+        this.successMessage = `ITAR Violation for Employee ID ${violation.employee_id} and Project ID ${violation.project_id} was successfully resolved.`;
+        this.showSuccessDialog.set(true);
         this.loadViolations();
         this.closeResolveDialog();
       },

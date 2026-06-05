@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../../../core/services/config.service';
+import { LeaverViolation, LeaverViolationResolve } from '../models/leaver-mover.models';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +20,18 @@ export class AuditService {
       hr_job_id: hrJobId,
       access_job_id: itJobId
     });
+  }
+
+  getViolations(statusFilter?: string): Observable<LeaverViolation[]> {
+    let url = `${this.baseUrl}/leaver-mover/violations`;
+    if (statusFilter) {
+      url += `?status_filter=${statusFilter}`;
+    }
+    return this.http.get<LeaverViolation[]>(url);
+  }
+
+  resolveViolation(id: string, payload: LeaverViolationResolve): Observable<LeaverViolation> {
+    return this.http.post<LeaverViolation>(`${this.baseUrl}/leaver-mover/violations/${id}/resolve`, payload);
   }
 
   exportCsv(violations: any[]): Observable<Blob> {

@@ -37,12 +37,12 @@ export class DataHubComponent implements OnInit, OnDestroy {
 
   // Mapping State
   currentFile = signal<File | null>(null);
-  currentType = signal<'personnel' | 'projects' | 'procurement' | 'inventory' | null>(null);
+  currentType = signal<'personnel' | 'projects' | 'procurement' | 'inventory' | 'it_activity' | null>(null);
   headers = signal<string[]>([]);
   isUploading = signal(false);
   alert = signal<{ message: string; type: 'success' | 'error' | 'info'; errors?: any[] } | null>(null);
   syncStatus = signal<SyncStatus | null>(null);
-  activeSidebarTab = signal<'personnel' | 'projects' | 'procurement' | 'inventory'>('personnel');
+  activeSidebarTab = signal<'personnel' | 'projects' | 'procurement' | 'inventory' | 'it_activity'>('personnel');
 
   readonly personnelAttributes: TargetAttribute[] = [
     { key: 'employee_id', label: 'Employee ID', required: true },
@@ -83,12 +83,21 @@ export class DataHubComponent implements OnInit, OnDestroy {
     { key: 'physical_location_room', label: 'Physical Room', required: false },
   ];
 
+  readonly itActivityAttributes: TargetAttribute[] = [
+    { key: 'employee_id', label: 'Employee ID', required: true },
+    { key: 'last_system_login', label: 'Last Login Timestamp', required: true },
+    { key: 'system_name', label: 'Target System', required: false },
+    { key: 'user_name', label: 'User Name', required: false },
+    { key: 'system_access_level', label: 'Access Level', required: false },
+  ];
+
   get currentAttributes(): TargetAttribute[] {
     const type = this.currentType();
     if (type === 'personnel') return this.personnelAttributes;
     if (type === 'projects') return this.projectAttributes;
     if (type === 'procurement') return this.procurementAttributes;
     if (type === 'inventory') return this.inventoryAttributes;
+    if (type === 'it_activity') return this.itActivityAttributes;
     return [];
   }
 
@@ -120,7 +129,7 @@ export class DataHubComponent implements OnInit, OnDestroy {
     });
   }
 
-  onFileSelected(event: Event, type: 'personnel' | 'projects' | 'procurement' | 'inventory') {
+  onFileSelected(event: Event, type: 'personnel' | 'projects' | 'procurement' | 'inventory' | 'it_activity') {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
 
@@ -154,7 +163,8 @@ export class DataHubComponent implements OnInit, OnDestroy {
     if (type === 'personnel') upload$ = this.dataHubService.uploadPersonnel(file, mapping);
     else if (type === 'projects') upload$ = this.dataHubService.uploadProjects(file, mapping);
     else if (type === 'procurement') upload$ = this.dataHubService.uploadProcurement(file, mapping);
-    else upload$ = this.dataHubService.uploadInventory(file, mapping);
+    else if (type === 'inventory') upload$ = this.dataHubService.uploadInventory(file, mapping);
+    else upload$ = this.dataHubService.uploadItActivity(file, mapping);
 
     upload$.subscribe({
       next: (response: DataHubResponse) => {
@@ -163,6 +173,7 @@ export class DataHubComponent implements OnInit, OnDestroy {
         else if (type === 'projects') typeName = 'Project';
         else if (type === 'procurement') typeName = 'Procurement';
         else if (type === 'inventory') typeName = 'Inventory';
+        else if (type === 'it_activity') typeName = 'IT Activity';
         const msg = `${typeName} Data Uploaded: ${response.success_count} success, ${response.error_count} errors`;
         this.alert.set({
           message: msg,

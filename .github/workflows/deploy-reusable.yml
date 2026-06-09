@@ -1,0 +1,64 @@
+name: Reusable Deploy Frontend
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy Frontend to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Fetch Deployment Metadata from SSM
+        id: ssm_fetch
+        run: |
+          echo "Fetching target S3 bucket, CloudFront distribution ID, and domain name..."
+          FRONTEND_BUCKET=$(aws ssm get-parameter --name "/verity-portal/${{ inputs.environment }}/frontend_bucket" --query "Parameter.Value" --output text)
+          CLOUDFRONT_DISTRIBUTION_ID=$(aws ssm get-parameter --name "/verity-portal/${{ inputs.environment }}/cloudfront_distribution_id" --query "Parameter.Value" --output text)
+          DOMAIN_NAME=$(aws ssm get-parameter --name "/verity-portal/${{ inputs.environment }}/domain_name" --query "Parameter.Value" --output text)
+          
+          echo "FRONTEND_BUCKET=$FRONTEND_BUCKET" >> $GITHUB_ENV
+          echo "CLOUDFRONT_DISTRIBUTION_ID=$CLOUDFRONT_DISTRIBUTION_ID" >> $GITHUB_ENV
+          echo "DOMAIN_NAME=$DOMAIN_NAME" >> $GITHUB_ENV
+
+      - name: Configure Frontend Production Environment API URL
+        run: |
+          echo "export const environment = { production: true, apiUrl: 'https://verityportal.${{ env.DOMAIN_NAME }}' };" > src/environments/environment.prod.ts
+
+      - name: Build Angular Project
+        run: npm run build -- --configuration=production
+
+      - name: Sync Frontend Assets to S3
+        run: |
+          aws s3 sync dist/frontend/browser s3://${{ env.FRONTEND_BUCKET }} --delete
+
+      - name: Invalidate CloudFront CDN Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

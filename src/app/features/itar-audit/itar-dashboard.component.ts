@@ -13,12 +13,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ShareMapperComponent, TargetAttribute } from '../../shared/components/share-mapper/share-mapper.component';
 import { ColumnMapping } from '../data-hub/models/data-hub.models';
-import { RosterUploadResponse } from './models/itar.models';
+import { RosterUploadResponse, ComplianceViolation } from './models/itar.models';
 import { ItarService } from './services/itar.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/services/auth.service';
 import { DataHubService } from '../data-hub/data-hub.service';
 import { SyncStatus } from '../data-hub/models/data-hub.models';
+import { MatMenuModule } from '@angular/material/menu';
+import { exportToCsv, exportItarAuditPdf } from '../../shared/utils/report-exporter';
 
 @Component({
   selector: 'app-itar-dashboard',
@@ -37,7 +39,8 @@ import { SyncStatus } from '../data-hub/models/data-hub.models';
     MatFormFieldModule,
     MatInputModule,
     ShareMapperComponent,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatMenuModule
   ],
   templateUrl: './itar-dashboard.component.html',
   styleUrl: './itar-dashboard.component.css'
@@ -85,6 +88,26 @@ export class ItarDashboardComponent {
 
   ngOnInit() {
     this.loadData();
+  }
+
+  exportCsv(): void {
+    const headers: { key: keyof ComplianceViolation; label: string }[] = [
+      { key: 'employee_id', label: 'Employee ID' },
+      { key: 'project_id', label: 'Project ID' },
+      { key: 'citizenship', label: 'Citizenship' },
+      { key: 'sensitivity', label: 'Project Sensitivity' },
+      { key: 'status', label: 'Status' },
+      { key: 'notes', label: 'Detection Notes' },
+      { key: 'created_at', label: 'Detected At' },
+      { key: 'resolution_reason', label: 'Resolution Reason' },
+      { key: 'resolved_by', label: 'Resolved By' },
+      { key: 'resolved_at', label: 'Resolved At' }
+    ];
+    exportToCsv(this.violations(), headers, `ITAR_Audit_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
+  exportPdf(): void {
+    exportItarAuditPdf(this.violations());
   }
 
   loadData() {

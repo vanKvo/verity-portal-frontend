@@ -7,6 +7,12 @@ import { LeaverAuditService } from './services/leaver-audit.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { DataHubService } from '../data-hub/data-hub.service';
+import { exportToCsv, exportLeaverAuditPdf } from '../../shared/utils/report-exporter';
+
+jest.mock('../../shared/utils/report-exporter', () => ({
+  exportToCsv: jest.fn(),
+  exportLeaverAuditPdf: jest.fn()
+}));
 
 describe('LeaverAuditDashboardComponent', () => {
   let component: LeaverAuditDashboardComponent;
@@ -140,5 +146,15 @@ describe('LeaverAuditDashboardComponent', () => {
     expect(component.resolvingViolation()).toBe(violation);
 
     alertSpy.mockRestore();
+  });
+
+  it('should call exportToCsv when exportCsv is triggered', () => {
+    component.exportCsv();
+    expect(exportToCsv).toHaveBeenCalled();
+  });
+
+  it('should call exportLeaverAuditPdf when exportPdf is triggered', () => {
+    component.exportPdf();
+    expect(exportLeaverAuditPdf).toHaveBeenCalled();
   });
 });

@@ -18,6 +18,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { RouterModule } from '@angular/router';
 import { DataHubService } from '../data-hub/data-hub.service';
 import { SyncStatus } from '../data-hub/models/data-hub.models';
+import { MatMenuModule } from '@angular/material/menu';
+import { exportToCsv, exportAssetAuditPdf } from '../../shared/utils/report-exporter';
 
 @Component({
   selector: 'app-asset-audit-dashboard',
@@ -36,7 +38,8 @@ import { SyncStatus } from '../data-hub/models/data-hub.models';
     MatTooltipModule,
     MatProgressSpinnerModule,
     FormsModule,
-    RouterModule
+    RouterModule,
+    MatMenuModule
   ],
   templateUrl: './asset-audit-dashboard.component.html',
   styleUrls: ['./asset-audit-dashboard.component.css']
@@ -89,6 +92,27 @@ export class AssetAuditDashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+  }
+
+  exportCsv(): void {
+    const headers: { key: keyof AssetViolation; label: string }[] = [
+      { key: 'violation_type', label: 'Violation Type' },
+      { key: 'asset_tag', label: 'Asset Tag' },
+      { key: 'po_number', label: 'PO Number' },
+      { key: 'assigned_employee_id', label: 'Custody' },
+      { key: 'inventory_status', label: 'IT Inventory Status' },
+      { key: 'procurement_status', label: 'Procurement Status' },
+      { key: 'physical_location_site', label: 'Location Site' },
+      { key: 'physical_location_room', label: 'Location Room' },
+      { key: 'status', label: 'Status' },
+      { key: 'created_at', label: 'Detected At' },
+      { key: 'resolution_reason', label: 'Resolution Reason' }
+    ];
+    exportToCsv(this.violations(), headers, `Asset_Audit_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
+  exportPdf(): void {
+    exportAssetAuditPdf(this.violations());
   }
 
   loadData() {

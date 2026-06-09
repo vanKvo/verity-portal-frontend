@@ -18,6 +18,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { RouterModule } from '@angular/router';
 import { DataHubService } from '../data-hub/data-hub.service';
 import { SyncStatus } from '../data-hub/models/data-hub.models';
+import { MatMenuModule } from '@angular/material/menu';
+import { exportToCsv, exportLeaverAuditPdf } from '../../shared/utils/report-exporter';
 
 @Component({
   selector: 'app-leaver-audit-dashboard',
@@ -36,7 +38,8 @@ import { SyncStatus } from '../data-hub/models/data-hub.models';
     MatTooltipModule,
     MatProgressSpinnerModule,
     FormsModule,
-    RouterModule
+    RouterModule,
+    MatMenuModule
   ],
   templateUrl: './leaver-audit-dashboard.component.html',
   styleUrls: ['./leaver-audit-dashboard.component.css']
@@ -90,6 +93,26 @@ export class LeaverAuditDashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+  }
+
+  exportCsv(): void {
+    const headers: { key: keyof LeaverViolation; label: string }[] = [
+      { key: 'employee_id', label: 'Employee ID' },
+      { key: 'hr_termination_date', label: 'Termination Date' },
+      { key: 'last_system_login', label: 'Last System Login' },
+      { key: 'system_name', label: 'System Name' },
+      { key: 'ip_address', label: 'IP Address' },
+      { key: 'status', label: 'Status' },
+      { key: 'created_at', label: 'Detected At' },
+      { key: 'resolution_reason', label: 'Resolution Reason' },
+      { key: 'resolved_by', label: 'Resolved By' },
+      { key: 'resolved_at', label: 'Resolved At' }
+    ];
+    exportToCsv(this.violations(), headers, `Leaver_Audit_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
+  exportPdf(): void {
+    exportLeaverAuditPdf(this.violations());
   }
 
   loadData() {

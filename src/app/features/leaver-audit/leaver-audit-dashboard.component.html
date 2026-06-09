@@ -8,6 +8,15 @@
           <mat-icon>cloud_upload</mat-icon>
           UPDATE / INGEST DATA
         </button>
+        <button mat-stroked-button [matMenuTriggerFor]="exportMenu"
+          *ngIf="!isDataIngestionRequired() && !isLoading()">
+          <mat-icon>download</mat-icon>
+          EXPORT REPORT
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item (click)="exportPdf()">Export to PDF</button>
+          <button mat-menu-item (click)="exportCsv()">Export to CSV</button>
+        </mat-menu>
         <button mat-stroked-button color="primary" routerLink="/dashboard">
           <mat-icon>arrow_back</mat-icon>
           BACK TO DASHBOARD

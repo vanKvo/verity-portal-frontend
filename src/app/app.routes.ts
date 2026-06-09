@@ -15,8 +15,8 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'audit',
-    loadComponent: () => import('./features/audit/audit-dashboard.component').then(m => m.AuditDashboardComponent),
+    path: 'leaver-audit',
+    loadComponent: () => import('./features/leaver-audit/leaver-audit-dashboard.component').then(m => m.LeaverAuditDashboardComponent),
     canActivate: [authGuard]
   },
   {

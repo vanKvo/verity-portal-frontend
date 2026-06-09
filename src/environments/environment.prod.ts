@@ -1,4 +1,1 @@
-export const environment = {
-  production: true,
-  apiUrl: 'https://api.verityportal.com'
-};
+export const environment = { production: true, apiUrl: 'https://verityportal.vanmuses.com' };

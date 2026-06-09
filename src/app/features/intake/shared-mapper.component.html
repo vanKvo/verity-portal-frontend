@@ -3,11 +3,6 @@
     <mat-card-subtitle>Map your uploaded file columns to system attributes</mat-card-subtitle>
   </mat-card-header>
 
-  <div class="manual-mapping-prompt" *ngIf="!isReady() && headers().length > 0" style="margin: 16px; padding: 12px; background-color: #fff8e1; color: #b78103; border-radius: 4px; display: flex; align-items: center; gap: 8px;">
-    <mat-icon>warning</mat-icon>
-    <span>Some required fields could not be matched automatically. Please select them manually.</span>
-  </div>
-
   <mat-card-content style="margin-top: 16px;">
     <table mat-table [dataSource]="headers()" class="full-width">
       <!-- Original Header Column -->

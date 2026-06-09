@@ -11,13 +11,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
-import { AuditService } from './services/audit.service';
+import { LeaverAuditService } from './services/leaver-audit.service';
 import { LeaverViolation } from './models/leaver-mover.models';
 import { AuthService } from '../../core/services/auth.service';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-audit-dashboard',
+  selector: 'app-leaver-audit-dashboard',
   standalone: true,
   imports: [
     CommonModule,
@@ -34,11 +34,11 @@ import { RouterModule } from '@angular/router';
     FormsModule,
     RouterModule
   ],
-  templateUrl: './audit-dashboard.component.html',
-  styleUrls: ['./audit-dashboard.component.css']
+  templateUrl: './leaver-audit-dashboard.component.html',
+  styleUrls: ['./leaver-audit-dashboard.component.css']
 })
-export class AuditDashboardComponent implements OnInit {
-  private auditService = inject(AuditService);
+export class LeaverAuditDashboardComponent implements OnInit {
+  private auditService = inject(LeaverAuditService);
   public authService = inject(AuthService);
 
   violations = signal<LeaverViolation[]>([]);

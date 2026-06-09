@@ -14,7 +14,7 @@ export class ItarService {
   private config = inject(ConfigService);
   private authService = inject(AuthService);
   
-  private readonly baseUrl = `${this.config.apiUrl}/api/v1/itar`;
+  private readonly baseUrl = `${this.config.apiUrl}/itar`;
   
   violations = signal<ComplianceViolation[]>([]);
   alert = signal<{ message: string; type: 'success' | 'error' | 'info'; errors?: any[] } | null>(null);

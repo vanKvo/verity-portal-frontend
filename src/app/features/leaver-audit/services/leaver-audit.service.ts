@@ -7,12 +7,12 @@ import { LeaverViolation, LeaverViolationResolve } from '../models/leaver-mover.
 @Injectable({
   providedIn: 'root'
 })
-export class AuditService {
+export class LeaverAuditService {
   private http = inject(HttpClient);
   private config = inject(ConfigService);
   
   private get baseUrl() {
-    return `${this.config.apiUrl}/audit`;
+    return `${this.config.apiUrl}/leaver-audit`;
   }
 
   runAudit(hrJobId: string, itJobId: string): Observable<any> {

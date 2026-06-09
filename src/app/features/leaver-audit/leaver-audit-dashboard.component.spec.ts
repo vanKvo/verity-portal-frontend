@@ -2,15 +2,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { signal } from '@angular/core';
-import { AuditDashboardComponent } from './audit-dashboard.component';
-import { AuditService } from './services/audit.service';
+import { LeaverAuditDashboardComponent } from './leaver-audit-dashboard.component';
+import { LeaverAuditService } from './services/leaver-audit.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 
-describe('AuditDashboardComponent', () => {
-  let component: AuditDashboardComponent;
-  let fixture: ComponentFixture<AuditDashboardComponent>;
-  let auditServiceSpy: jest.Mocked<AuditService>;
+describe('LeaverAuditDashboardComponent', () => {
+  let component: LeaverAuditDashboardComponent;
+  let fixture: ComponentFixture<LeaverAuditDashboardComponent>;
+  let auditServiceSpy: jest.Mocked<LeaverAuditService>;
   let authServiceSpy: jest.Mocked<AuthService>;
 
   const mockViolations = [
@@ -54,11 +54,11 @@ describe('AuditDashboardComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [
-        AuditDashboardComponent,
+        LeaverAuditDashboardComponent,
         NoopAnimationsModule
       ],
       providers: [
-        { provide: AuditService, useValue: auditServiceSpy },
+        { provide: LeaverAuditService, useValue: auditServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
         {
           provide: ActivatedRoute,
@@ -70,7 +70,7 @@ describe('AuditDashboardComponent', () => {
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AuditDashboardComponent);
+    fixture = TestBed.createComponent(LeaverAuditDashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

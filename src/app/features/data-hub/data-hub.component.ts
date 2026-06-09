@@ -37,7 +37,7 @@ export class DataHubComponent implements OnInit, OnDestroy {
   private pollingInterval: any;
 
   // Ingestion Mode
-  isAssetAuditMode = signal(false);
+  auditMode = signal<'asset_audit' | 'leaver_audit' | 'itar_audit' | null>(null);
 
   // Mapping State
   currentFile = signal<File | null>(null);
@@ -48,28 +48,65 @@ export class DataHubComponent implements OnInit, OnDestroy {
   syncStatus = signal<SyncStatus | null>(null);
   activeSidebarTab = signal<'personnel' | 'projects' | 'procurement' | 'inventory' | 'it_activity'>('personnel');
 
-  // Session Ingestion Tracker
+  // Session Ingestion Trackers
+  personnelUploadedThisSession = signal(false);
+  projectsUploadedThisSession = signal(false);
   procurementUploadedThisSession = signal(false);
   inventoryUploadedThisSession = signal(false);
+  itActivityUploadedThisSession = signal(false);
 
   // Next action messaging
   nextActionMessage = computed(() => {
-    const hasProc = this.procurementUploadedThisSession();
-    const hasInv = this.inventoryUploadedThisSession();
+    const mode = this.auditMode();
+    if (!mode) return '';
 
-    if (hasProc && hasInv) {
-      return 'All required files successfully ingested! You can now view the reconciliation audit results.';
-    } else if (hasProc && !hasInv) {
-      return 'Procurement records ingested successfully! Next action: Select "IT Inventory" in the sidebar and upload the IT Inventory spreadsheet.';
-    } else if (!hasProc && hasInv) {
-      return 'IT Inventory records ingested successfully! Next action: Select "Procurement Records" in the sidebar and upload the Procurement spreadsheet.';
-    } else {
-      return 'To begin, select "Procurement Records" in the sidebar and upload your purchase orders spreadsheet.';
+    if (mode === 'asset_audit') {
+      const hasProc = this.procurementUploadedThisSession();
+      const hasInv = this.inventoryUploadedThisSession();
+      if (hasProc && hasInv) {
+        return 'All required files successfully ingested! You can now view the reconciliation audit results.';
+      } else if (hasProc && !hasInv) {
+        return 'Procurement records ingested successfully! Next action: Select "IT Inventory" in the sidebar and upload the IT Inventory spreadsheet.';
+      } else if (!hasProc && hasInv) {
+        return 'IT Inventory records ingested successfully! Next action: Select "Procurement Records" in the sidebar and upload the Procurement spreadsheet.';
+      } else {
+        return 'To begin, select "Procurement Records" in the sidebar and upload your purchase orders spreadsheet.';
+      }
+    } else if (mode === 'leaver_audit') {
+      const hasPers = this.personnelUploadedThisSession();
+      const hasIt = this.itActivityUploadedThisSession();
+      if (hasPers && hasIt) {
+        return 'All required files successfully ingested! You can now view the leaver audit results.';
+      } else if (hasPers && !hasIt) {
+        return 'Personnel records ingested successfully! Next action: Select "IT Activity Logs" in the sidebar and upload the login activity spreadsheet.';
+      } else if (!hasPers && hasIt) {
+        return 'IT Activity logs ingested successfully! Next action: Select "Personnel & HR" in the sidebar and upload the HR roster spreadsheet.';
+      } else {
+        return 'To begin, select "Personnel & HR" in the sidebar and upload the HR roster spreadsheet.';
+      }
+    } else if (mode === 'itar_audit') {
+      const hasPers = this.personnelUploadedThisSession();
+      const hasProj = this.projectsUploadedThisSession();
+      if (hasPers && hasProj) {
+        return 'All required files successfully ingested! You can now view the ITAR compliance dashboard.';
+      } else if (hasPers && !hasProj) {
+        return 'Personnel records ingested successfully! Next action: Select "Project Governance" in the sidebar and upload the projects registry.';
+      } else if (!hasPers && hasProj) {
+        return 'Project Governance records ingested successfully! Next action: Select "Personnel & HR" in the sidebar and upload the HR roster spreadsheet.';
+      } else {
+        return 'To begin, select "Personnel & HR" in the sidebar and upload the HR roster spreadsheet.';
+      }
     }
+    return '';
   });
 
   isReconciliationComplete = computed(() => {
-    return this.procurementUploadedThisSession() && this.inventoryUploadedThisSession();
+    const mode = this.auditMode();
+    if (!mode) return false;
+    if (mode === 'asset_audit') return this.procurementUploadedThisSession() && this.inventoryUploadedThisSession();
+    if (mode === 'leaver_audit') return this.personnelUploadedThisSession() && this.itActivityUploadedThisSession();
+    if (mode === 'itar_audit') return this.personnelUploadedThisSession() && this.projectsUploadedThisSession();
+    return false;
   });
 
   readonly personnelAttributes: TargetAttribute[] = [
@@ -133,16 +170,30 @@ export class DataHubComponent implements OnInit, OnDestroy {
     this.loadSyncStatus();
     
     this.route.queryParams.subscribe(params => {
-      if (params['targetAudit'] === 'asset_audit') {
-        this.isAssetAuditMode.set(true);
-        // For Asset Audit, only procurement and inventory are valid
+      const target = params['targetAudit'];
+      if (target === 'asset_audit') {
+        this.auditMode.set('asset_audit');
         if (this.authService.hasRole('ROLE_FINANCE')) {
           this.activeSidebarTab.set('procurement');
         } else if (this.authService.hasRole('ROLE_IT')) {
           this.activeSidebarTab.set('inventory');
         }
+      } else if (target === 'leaver_audit') {
+        this.auditMode.set('leaver_audit');
+        if (this.authService.hasRole('ROLE_HR')) {
+          this.activeSidebarTab.set('personnel');
+        } else if (this.authService.hasRole('ROLE_IT') || this.authService.hasRole('ROLE_ECO')) {
+          this.activeSidebarTab.set('it_activity');
+        }
+      } else if (target === 'itar_audit') {
+        this.auditMode.set('itar_audit');
+        if (this.authService.hasRole('ROLE_HR')) {
+          this.activeSidebarTab.set('personnel');
+        } else if (this.authService.hasRole('ROLE_ECO')) {
+          this.activeSidebarTab.set('projects');
+        }
       } else {
-        this.isAssetAuditMode.set(false);
+        this.auditMode.set(null);
         // Auto-select tab they actually have permissions to see
         if (this.authService.hasRole('ROLE_HR')) {
           this.activeSidebarTab.set('personnel');
@@ -210,8 +261,18 @@ export class DataHubComponent implements OnInit, OnDestroy {
     upload$.subscribe({
       next: (response: DataHubResponse) => {
         let typeName = 'Data';
-        if (type === 'personnel') typeName = 'HR';
-        else if (type === 'projects') typeName = 'Project';
+        if (type === 'personnel') {
+          typeName = 'HR';
+          if (response.success_count > 0) {
+            this.personnelUploadedThisSession.set(true);
+          }
+        }
+        else if (type === 'projects') {
+          typeName = 'Project';
+          if (response.success_count > 0) {
+            this.projectsUploadedThisSession.set(true);
+          }
+        }
         else if (type === 'procurement') {
           typeName = 'Procurement';
           if (response.success_count > 0) {
@@ -224,7 +285,12 @@ export class DataHubComponent implements OnInit, OnDestroy {
             this.inventoryUploadedThisSession.set(true);
           }
         }
-        else if (type === 'it_activity') typeName = 'IT Activity';
+        else if (type === 'it_activity') {
+          typeName = 'IT Activity';
+          if (response.success_count > 0) {
+            this.itActivityUploadedThisSession.set(true);
+          }
+        }
         const msg = `${typeName} Data Uploaded: ${response.success_count} success, ${response.error_count} errors`;
         this.alert.set({
           message: msg,

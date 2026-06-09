@@ -2,17 +2,30 @@
   <header class="header">
     <div class="header-top">
       <h1>Leaver & Mover Access Audit</h1>
-      <button mat-stroked-button color="primary" routerLink="/dashboard">
-        <mat-icon>arrow_back</mat-icon>
-        BACK TO DASHBOARD
-      </button>
+      <div class="header-actions">
+        <button mat-raised-button color="primary" routerLink="/data-hub" [queryParams]="{ targetAudit: 'leaver_audit' }"
+          *ngIf="!isDataIngestionRequired() && !isLoading()">
+          <mat-icon>cloud_upload</mat-icon>
+          UPDATE / INGEST DATA
+        </button>
+        <button mat-stroked-button color="primary" routerLink="/dashboard">
+          <mat-icon>arrow_back</mat-icon>
+          BACK TO DASHBOARD
+        </button>
+      </div>
     </div>
     <p class="subtitle">
       Review and remediate compliance anomalies where terminated employees accessed company systems or networks after their recorded separation dates (NIST SP 800-171 / CMMC AC.L2-3.1.4 compliance verification).
     </p>
   </header>
 
-  <mat-tab-group class="audit-tabs mat-elevation-z2">
+  <div *ngIf="isLoading()" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Analyzing ingestion records & reconciliation state...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading()">
+    <mat-tab-group class="audit-tabs mat-elevation-z2" *ngIf="!isDataIngestionRequired()">
     <!-- Open Violations Tab -->
     <mat-tab>
       <ng-template matTabLabel>
@@ -206,6 +219,86 @@
       </mat-card>
     </mat-tab>
   </mat-tab-group>
+
+  <!-- Guided Ingestion Required Empty State -->
+  <div class="empty-state-card mat-elevation-z2" *ngIf="isDataIngestionRequired()">
+    <div class="empty-state-header">
+      <mat-icon class="empty-state-icon">cloud_upload</mat-icon>
+      <h2>Ingestion Required for Leaver Access Audit</h2>
+      <p class="empty-state-subtitle">To run the leaver access audit, the engine requires master records from both HR Personnel and IT Activity Logs. Currently, one or both datasets are missing or empty.</p>
+    </div>
+
+    <div class="schema-requirements">
+      <h3>Required Data Schemas</h3>
+      <p class="schema-instruction">Verify your spreadsheets contain the following columns prior to ingestion:</p>
+
+      <div class="schema-grid">
+        <!-- HR Personnel Card -->
+        <mat-card class="schema-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar color="primary">badge</mat-icon>
+            <mat-card-title>1. HR Personnel Records</mat-card-title>
+            <mat-card-subtitle>Active and separated employees roster</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="column-group">
+              <span class="col-label">Required Fields:</span>
+              <span class="field-tags">
+                <code class="required-col">employee_id</code>
+                <code class="required-col">first_name</code>
+                <code class="required-col">last_name</code>
+                <code class="required-col">citizenship_status</code>
+                <code class="required-col">termination_date</code>
+              </span>
+            </div>
+            <div class="column-group">
+              <span class="col-label">Optional Fields:</span>
+              <span class="field-tags">
+                <span class="tag">email</span>
+              </span>
+            </div>
+            <p class="schema-note">Determines official termination/separation dates of personnel.</p>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- IT Activity Card -->
+        <mat-card class="schema-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar color="accent">history_toggle_off</mat-icon>
+            <mat-card-title>2. IT Activity Logs</mat-card-title>
+            <mat-card-subtitle>Historical system and network access logs</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="column-group">
+              <span class="col-label">Required Fields:</span>
+              <span class="field-tags">
+                <code class="required-col">employee_id</code>
+                <code class="required-col">last_system_login</code>
+              </span>
+            </div>
+            <div class="column-group">
+              <span class="col-label">Optional Fields:</span>
+              <span class="field-tags">
+                <span class="tag">system_name</span>
+                <span class="tag">user_name</span>
+                <span class="tag">system_access_level</span>
+              </span>
+            </div>
+            <p class="schema-note">Records the last active logins to verify access control compliance.</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+
+    <div class="cta-actions">
+      <button mat-raised-button color="primary" class="btn-ingest-large" routerLink="/data-hub"
+        [queryParams]="{ targetAudit: 'leaver_audit' }">
+        <mat-icon>cloud_upload</mat-icon>
+        BEGIN LEAVER AUDIT INGESTION
+      </button>
+    </div>
+  </div>
+</ng-container>
 
   <!-- Resolution Overlay Modal -->
   <div class="dialog-backdrop" *ngIf="resolvingViolation() as violation">

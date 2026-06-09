@@ -17,6 +17,8 @@ import { RosterUploadResponse } from './models/itar.models';
 import { ItarService } from './services/itar.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/services/auth.service';
+import { DataHubService } from '../data-hub/data-hub.service';
+import { SyncStatus } from '../data-hub/models/data-hub.models';
 
 @Component({
   selector: 'app-itar-dashboard',
@@ -45,8 +47,17 @@ export class ItarDashboardComponent {
 
   public authService = inject(AuthService);
   private itarService = inject(ItarService);
+  private dataHubService = inject(DataHubService);
 
   violations = this.itarService.violations;
+  syncStatus = signal<SyncStatus | null>(null);
+  isLoading = signal(true);
+
+  isDataIngestionRequired = computed(() => {
+    const status = this.syncStatus();
+    if (!status) return false;
+    return !status.personnel_last_sync || !status.projects_last_sync;
+  });
   alert = this.itarService.alert;
   activeColumns: string[] = ['employee_id', 'project_id', 'citizenship', 'sensitivity', 'status', 'notes', 'actions'];
   resolvedColumns: string[] = ['employee_id', 'project_id', 'citizenship', 'sensitivity', 'status', 'resolved_by', 'resolved_at', 'resolution_reason', 'notes'];
@@ -73,11 +84,40 @@ export class ItarDashboardComponent {
   ];
 
   ngOnInit() {
-    this.loadViolations();
+    this.loadData();
+  }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.dataHubService.getSyncStatus().subscribe({
+      next: (status) => {
+        this.syncStatus.set(status);
+        if (!status.personnel_last_sync || !status.projects_last_sync) {
+          this.violations.set([]);
+          this.isLoading.set(false);
+        } else {
+          this.loadViolations();
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load sync status', err);
+        this.loadViolations();
+      }
+    });
   }
 
   loadViolations() {
-    this.itarService.getViolations().subscribe(v => this.violations.set(v));
+    this.isLoading.set(true);
+    this.itarService.getViolations().subscribe({
+      next: (v) => {
+        this.violations.set(v);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load violations', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 
   closeAlert() {

@@ -4,6 +4,10 @@
   </mat-card-header>
 
   <mat-card-content style="margin-top: 16px;">
+    <div *ngIf="missingRequiredFields().length > 0" class="manual-mapping-prompt" style="color: #c62828; background-color: #ffebee; border: 1px solid #ffcdd2; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+      <mat-icon style="font-size: 20px; width: 20px; height: 20px; color: #c62828;">warning</mat-icon>
+      <span>Some required fields could not be matched automatically. Please review the mappings. Missing: {{ missingRequiredFields().join(', ') }}</span>
+    </div>
     <table mat-table [dataSource]="headers()" class="full-width">
       <!-- Original Header Column -->
       <ng-container matColumnDef="original">

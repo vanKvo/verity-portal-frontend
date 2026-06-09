@@ -6,12 +6,14 @@ import { LeaverAuditDashboardComponent } from './leaver-audit-dashboard.componen
 import { LeaverAuditService } from './services/leaver-audit.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ActivatedRoute } from '@angular/router';
+import { DataHubService } from '../data-hub/data-hub.service';
 
 describe('LeaverAuditDashboardComponent', () => {
   let component: LeaverAuditDashboardComponent;
   let fixture: ComponentFixture<LeaverAuditDashboardComponent>;
   let auditServiceSpy: jest.Mocked<LeaverAuditService>;
   let authServiceSpy: jest.Mocked<AuthService>;
+  let dataHubServiceSpy: jest.Mocked<DataHubService>;
 
   const mockViolations = [
     {
@@ -52,6 +54,18 @@ describe('LeaverAuditDashboardComponent', () => {
       currentUser: signal({ email: 'hr@verity.com', roles: ['ROLE_HR'] })
     } as any;
 
+    const mockSyncStatus = {
+      personnel_last_sync: '2026-06-01T00:00:00Z',
+      projects_last_sync: '2026-06-01T00:00:00Z',
+      procurement_last_sync: '2026-06-01T00:00:00Z',
+      inventory_last_sync: '2026-06-01T00:00:00Z',
+      it_activity_last_sync: '2026-06-01T00:00:00Z'
+    };
+
+    dataHubServiceSpy = {
+      getSyncStatus: jest.fn().mockReturnValue(of(mockSyncStatus))
+    } as any;
+
     await TestBed.configureTestingModule({
       imports: [
         LeaverAuditDashboardComponent,
@@ -60,6 +74,7 @@ describe('LeaverAuditDashboardComponent', () => {
       providers: [
         { provide: LeaverAuditService, useValue: auditServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
+        { provide: DataHubService, useValue: dataHubServiceSpy },
         {
           provide: ActivatedRoute,
           useValue: {

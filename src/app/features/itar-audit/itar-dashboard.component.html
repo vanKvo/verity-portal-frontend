@@ -1,14 +1,28 @@
 <div class="itar-container">
   <header class="header">
     <div class="header-top">
-      <h1>ITAR & Export Control - Citizenship and Project Sensivity</h1>
-      <button mat-stroked-button color="primary" routerLink="/dashboard">
-        <mat-icon>arrow_back</mat-icon>
-        BACK TO DASHBOARD
-      </button>
+      <h1>ITAR & Export Control - Citizenship and Project Sensitivity</h1>
+      <div class="header-actions">
+        <button mat-raised-button color="primary" routerLink="/data-hub" [queryParams]="{ targetAudit: 'itar_audit' }"
+          *ngIf="!isDataIngestionRequired() && !isLoading()">
+          <mat-icon>cloud_upload</mat-icon>
+          UPDATE / INGEST DATA
+        </button>
+        <button mat-stroked-button color="primary" routerLink="/dashboard">
+          <mat-icon>arrow_back</mat-icon>
+          BACK TO DASHBOARD
+        </button>
+      </div>
     </div>
     <p class="subtitle">Compliance Reconciliation & Violation Monitoring</p>
   </header>
+
+  <div *ngIf="isLoading()" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Analyzing ingestion records & reconciliation state...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading()">
 
   <div *ngIf="alert()" class="alert-box" [ngClass]="alert()?.type">
     <div class="alert-main" style="display: flex; align-items: center; width: 100%;">
@@ -33,8 +47,9 @@
     </div>
   </div>
 
-  <mat-card class="stepper-card">
-    <mat-stepper #stepper [linear]="true">
+  <ng-container *ngIf="!isDataIngestionRequired()">
+    <mat-card class="stepper-card">
+      <mat-stepper #stepper [linear]="true">
       <!-- Step 1: Upload & Map -->
       <mat-step [completed]="ingestionSummary() !== null">
         <ng-template matStepLabel>Upload & Map Roster</ng-template>
@@ -292,6 +307,87 @@
       </mat-tab>
     </mat-tab-group>
   </mat-card>
+  </ng-container>
+
+  <!-- Guided Ingestion Required Empty State -->
+  <div class="empty-state-card mat-elevation-z2" *ngIf="isDataIngestionRequired()">
+    <div class="empty-state-header">
+      <mat-icon class="empty-state-icon">cloud_upload</mat-icon>
+      <h2>Ingestion Required for ITAR Compliance Audit</h2>
+      <p class="empty-state-subtitle">To run the ITAR compliance audit, the engine requires master records from both HR Personnel and Project Governance. Currently, one or both datasets are missing or empty.</p>
+    </div>
+
+    <div class="schema-requirements">
+      <h3>Required Data Schemas</h3>
+      <p class="schema-instruction">Verify your spreadsheets contain the following columns prior to ingestion:</p>
+
+      <div class="schema-grid">
+        <!-- HR Personnel Card -->
+        <mat-card class="schema-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar color="primary">badge</mat-icon>
+            <mat-card-title>1. HR Personnel Records</mat-card-title>
+            <mat-card-subtitle>Active and separated employees roster</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="column-group">
+              <span class="col-label">Required Fields:</span>
+              <span class="field-tags">
+                <code class="required-col">employee_id</code>
+                <code class="required-col">first_name</code>
+                <code class="required-col">last_name</code>
+                <code class="required-col">citizenship_status</code>
+                <code class="required-col">termination_date</code>
+              </span>
+            </div>
+            <div class="column-group">
+              <span class="col-label">Optional Fields:</span>
+              <span class="field-tags">
+                <span class="tag">email</span>
+              </span>
+            </div>
+            <p class="schema-note">Determines citizenship status (US Citizen/Foreign National) of personnel.</p>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Project Governance Card -->
+        <mat-card class="schema-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar color="accent">business_center</mat-icon>
+            <mat-card-title>2. Project Governance</mat-card-title>
+            <mat-card-subtitle>Active corporate projects classification</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="column-group">
+              <span class="col-label">Required Fields:</span>
+              <span class="field-tags">
+                <code class="required-col">project_id</code>
+                <code class="required-col">name</code>
+                <code class="required-col">sensitivity</code>
+              </span>
+            </div>
+            <div class="column-group">
+              <span class="col-label">Optional Fields:</span>
+              <span class="field-tags">
+                <span class="tag">department</span>
+                <span class="tag">export_control_status</span>
+              </span>
+            </div>
+            <p class="schema-note">Registers project sensitivity level (e.g. ITAR Restricted) for access control validation.</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+
+    <div class="cta-actions">
+      <button mat-raised-button color="primary" class="btn-ingest-large" routerLink="/data-hub"
+        [queryParams]="{ targetAudit: 'itar_audit' }">
+        <mat-icon>cloud_upload</mat-icon>
+        BEGIN ITAR AUDIT INGESTION
+      </button>
+    </div>
+  </div>
+</ng-container>
 
   <!-- Resolution Overlay Modal -->
   <div class="dialog-backdrop" *ngIf="resolvingViolation() as violation">

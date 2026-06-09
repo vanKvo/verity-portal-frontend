@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,7 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/services/auth.service';
 import { DataHubService } from './data-hub.service';
 import { ShareMapperComponent, TargetAttribute } from '../../shared/components/share-mapper/share-mapper.component';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 
 import { ColumnMapping, DataHubResponse, SyncStatus } from './models/data-hub.models';
 
@@ -31,9 +31,13 @@ import { ColumnMapping, DataHubResponse, SyncStatus } from './models/data-hub.mo
 export class DataHubComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   dataHubService = inject(DataHubService);
+  private route = inject(ActivatedRoute);
 
   // Polling State
   private pollingInterval: any;
+
+  // Ingestion Mode
+  isAssetAuditMode = signal(false);
 
   // Mapping State
   currentFile = signal<File | null>(null);
@@ -43,6 +47,30 @@ export class DataHubComponent implements OnInit, OnDestroy {
   alert = signal<{ message: string; type: 'success' | 'error' | 'info'; errors?: any[] } | null>(null);
   syncStatus = signal<SyncStatus | null>(null);
   activeSidebarTab = signal<'personnel' | 'projects' | 'procurement' | 'inventory' | 'it_activity'>('personnel');
+
+  // Session Ingestion Tracker
+  procurementUploadedThisSession = signal(false);
+  inventoryUploadedThisSession = signal(false);
+
+  // Next action messaging
+  nextActionMessage = computed(() => {
+    const hasProc = this.procurementUploadedThisSession();
+    const hasInv = this.inventoryUploadedThisSession();
+
+    if (hasProc && hasInv) {
+      return 'All required files successfully ingested! You can now view the reconciliation audit results.';
+    } else if (hasProc && !hasInv) {
+      return 'Procurement records ingested successfully! Next action: Select "IT Inventory" in the sidebar and upload the IT Inventory spreadsheet.';
+    } else if (!hasProc && hasInv) {
+      return 'IT Inventory records ingested successfully! Next action: Select "Procurement Records" in the sidebar and upload the Procurement spreadsheet.';
+    } else {
+      return 'To begin, select "Procurement Records" in the sidebar and upload your purchase orders spreadsheet.';
+    }
+  });
+
+  isReconciliationComplete = computed(() => {
+    return this.procurementUploadedThisSession() && this.inventoryUploadedThisSession();
+  });
 
   readonly personnelAttributes: TargetAttribute[] = [
     { key: 'employee_id', label: 'Employee ID', required: true },
@@ -104,16 +132,29 @@ export class DataHubComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadSyncStatus();
     
-    // Auto-select tab they actually have permissions to see
-    if (this.authService.hasRole('ROLE_HR')) {
-      this.activeSidebarTab.set('personnel');
-    } else if (this.authService.hasRole('ROLE_ECO')) {
-      this.activeSidebarTab.set('projects');
-    } else if (this.authService.hasRole('ROLE_FINANCE')) {
-      this.activeSidebarTab.set('procurement');
-    } else if (this.authService.hasRole('ROLE_IT')) {
-      this.activeSidebarTab.set('inventory');
-    }
+    this.route.queryParams.subscribe(params => {
+      if (params['targetAudit'] === 'asset_audit') {
+        this.isAssetAuditMode.set(true);
+        // For Asset Audit, only procurement and inventory are valid
+        if (this.authService.hasRole('ROLE_FINANCE')) {
+          this.activeSidebarTab.set('procurement');
+        } else if (this.authService.hasRole('ROLE_IT')) {
+          this.activeSidebarTab.set('inventory');
+        }
+      } else {
+        this.isAssetAuditMode.set(false);
+        // Auto-select tab they actually have permissions to see
+        if (this.authService.hasRole('ROLE_HR')) {
+          this.activeSidebarTab.set('personnel');
+        } else if (this.authService.hasRole('ROLE_ECO')) {
+          this.activeSidebarTab.set('projects');
+        } else if (this.authService.hasRole('ROLE_FINANCE')) {
+          this.activeSidebarTab.set('procurement');
+        } else if (this.authService.hasRole('ROLE_IT')) {
+          this.activeSidebarTab.set('inventory');
+        }
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -171,8 +212,18 @@ export class DataHubComponent implements OnInit, OnDestroy {
         let typeName = 'Data';
         if (type === 'personnel') typeName = 'HR';
         else if (type === 'projects') typeName = 'Project';
-        else if (type === 'procurement') typeName = 'Procurement';
-        else if (type === 'inventory') typeName = 'Inventory';
+        else if (type === 'procurement') {
+          typeName = 'Procurement';
+          if (response.success_count > 0) {
+            this.procurementUploadedThisSession.set(true);
+          }
+        }
+        else if (type === 'inventory') {
+          typeName = 'Inventory';
+          if (response.success_count > 0) {
+            this.inventoryUploadedThisSession.set(true);
+          }
+        }
         else if (type === 'it_activity') typeName = 'IT Activity';
         const msg = `${typeName} Data Uploaded: ${response.success_count} success, ${response.error_count} errors`;
         this.alert.set({

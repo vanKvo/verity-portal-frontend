@@ -10,11 +10,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { AssetAuditService } from './asset-audit.service';
 import { AssetViolation } from './models/asset-audit.models';
 import { AuthService } from '../../core/services/auth.service';
 import { RouterModule } from '@angular/router';
+import { DataHubService } from '../data-hub/data-hub.service';
+import { SyncStatus } from '../data-hub/models/data-hub.models';
 
 @Component({
   selector: 'app-asset-audit-dashboard',
@@ -31,6 +34,7 @@ import { RouterModule } from '@angular/router';
     MatInputModule,
     MatTabsModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
     FormsModule,
     RouterModule
   ],
@@ -40,10 +44,20 @@ import { RouterModule } from '@angular/router';
 export class AssetAuditDashboardComponent implements OnInit {
   private auditService = inject(AssetAuditService);
   public authService = inject(AuthService);
+  private dataHubService = inject(DataHubService);
 
   violations = signal<AssetViolation[]>([]);
+  syncStatus = signal<SyncStatus | null>(null);
+  isLoading = signal(true);
+
   openViolations = computed(() => this.violations().filter(v => v.status === 'OPEN'));
   resolvedViolations = computed(() => this.violations().filter(v => v.status === 'RESOLVED'));
+
+  isDataIngestionRequired = computed(() => {
+    const status = this.syncStatus();
+    if (!status) return false;
+    return !status.procurement_last_sync || !status.inventory_last_sync;
+  });
 
   displayedColumns: string[] = [
     'type', 
@@ -74,13 +88,39 @@ export class AssetAuditDashboardComponent implements OnInit {
   successMessage = '';
 
   ngOnInit() {
-    this.loadViolations();
+    this.loadData();
+  }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.dataHubService.getSyncStatus().subscribe({
+      next: (status) => {
+        this.syncStatus.set(status);
+        if (!status.procurement_last_sync || !status.inventory_last_sync) {
+          this.violations.set([]);
+          this.isLoading.set(false);
+        } else {
+          this.loadViolations();
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load sync status', err);
+        this.loadViolations();
+      }
+    });
   }
 
   loadViolations() {
+    this.isLoading.set(true);
     this.auditService.getViolations().subscribe({
-      next: (data) => this.violations.set(data),
-      error: (err) => console.error('Failed to load violations', err)
+      next: (data) => {
+        this.violations.set(data);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load violations', err);
+        this.isLoading.set(false);
+      }
     });
   }
 

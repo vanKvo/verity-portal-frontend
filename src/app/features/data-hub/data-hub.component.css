@@ -353,3 +353,164 @@ h1 {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Guided Ingestion Checklist Styles */
+.guided-checklist-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.checklist-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.check-icon-large {
+  font-size: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  color: #1a237e;
+}
+
+.checklist-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.checklist-header p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.checklist-steps {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #f8fafc;
+  padding: 16px 20px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.step-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  border-color: #cbd5e1;
+}
+
+.step-item.active {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.step-item.done {
+  border-color: #a7f3d0;
+  background-color: #f0fdf4;
+}
+
+.step-status-icon mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.step-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.step-time {
+  font-size: 11px;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.step-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.action-alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.action-alert-banner.complete {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.action-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.action-text-wrapper {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.action-bold {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.action-msg {
+  font-weight: 500;
+}
+
+.btn-view-results-banner {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+}

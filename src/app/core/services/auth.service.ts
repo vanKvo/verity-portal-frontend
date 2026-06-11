@@ -58,8 +58,8 @@ export class AuthService {
       next: () => {},
       error: () => {},
       complete: () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('user');
         this._user.set(null);
         this.router.navigate(['/login']);
       }
@@ -69,11 +69,11 @@ export class AuthService {
   refreshToken() {
     return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {}).pipe(
       tap(response => {
-        localStorage.setItem('access_token', response.access_token);
+        sessionStorage.setItem('access_token', response.access_token);
         const user = this._user();
         if (user) {
           user.roles = response.roles;
-          localStorage.setItem('user', JSON.stringify(user));
+          sessionStorage.setItem('user', JSON.stringify(user));
           this._user.set({ ...user });
         }
       }),
@@ -86,14 +86,14 @@ export class AuthService {
 
   private handleAuthSuccess(response: AuthResponse, email: string) {
     const user: User = { email, roles: response.roles };
-    localStorage.setItem('access_token', response.access_token);
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('access_token', response.access_token);
+    sessionStorage.setItem('user', JSON.stringify(user));
     this._user.set(user);
     this.router.navigate(['/dashboard']);
   }
 
   private loadUserFromStorage(): User | null {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = sessionStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
   }
 }

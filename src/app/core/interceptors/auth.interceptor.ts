@@ -17,7 +17,7 @@ const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const config = inject(ConfigService);
   const authService = inject(AuthService);
-  const token = localStorage.getItem('access_token');
+  const token = sessionStorage.getItem('access_token');
 
   let cloned = req;
 

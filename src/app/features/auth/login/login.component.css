@@ -46,36 +46,6 @@
   background-color: #002244;
 }
 
-.divider {
-  display: flex;
-  align-items: center;
-  margin: 24px 0;
-  gap: 16px;
-  color: #999;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.divider mat-divider {
-  flex: 1;
-}
-
-.guest-section {
-  text-align: center;
-}
-
-.guest-section p {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 12px;
-}
-
-.guest-btn {
-  height: 48px;
-  border-color: #002244;
-  color: #002244;
-}
-
 .footer-note {
   text-align: center;
   font-size: 12px;

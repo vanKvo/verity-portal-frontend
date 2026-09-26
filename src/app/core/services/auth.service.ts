@@ -38,16 +38,6 @@ export class AuthService {
     );
   }
 
-  guestLogin() {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/guest-login`, {}).pipe(
-      tap(response => this.handleAuthSuccess(response, 'guest@verity.com')),
-      catchError(error => {
-        console.error('Guest login failed', error);
-        throw error;
-      })
-    );
-  }
-
   logout() {
     this.http.post(`${this.apiUrl}/logout`, {}).pipe(
       catchError(err => {
